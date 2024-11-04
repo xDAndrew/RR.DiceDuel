@@ -1,14 +1,17 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace RR.DiceDuel.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class TemplateController : ControllerBase
 {
-    [HttpGet(Name = "GetWeatherForecast")]
+    [Authorize]
+    [HttpGet(Name = "Test")]
     public IActionResult Get()
     {
-        return Ok();
+        var name = User.Identity.Name;
+        return Ok(name);
     }
 }
