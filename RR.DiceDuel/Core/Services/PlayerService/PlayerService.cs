@@ -1,25 +1,24 @@
 ﻿using System.Collections.Concurrent;
-using Microsoft.AspNetCore.SignalR;
 using RR.DiceDuel.Core.Services.PlayerService.Models;
-using RR.DiceDuel.ExternalServices.SignalR;
 
 namespace RR.DiceDuel.Core.Services.PlayerService;
 
-public class PlayerService(IHubContext<GameHub> hubContext) : IPlayerService
+public class PlayerService : IPlayerService
 {
     private readonly ConcurrentDictionary<string, Player> _players = new();
-    private readonly IHubContext<GameHub> _hubContext = hubContext;
 
-    public void AddPlayer(string connectionId, string playerName)
+    public void AddPlayer(string connectionId, string playerName, string roomId)
     {
+        Console.WriteLine($"AddPlayer id: [{connectionId}] name: [{playerName}]; room: [{roomId}]");
         _players.TryAdd(connectionId, new Player
         {
-            Id = connectionId, Name = playerName, PlayerRoom = "Lobby"
+            Id = connectionId, Name = playerName, PlayerRoom = roomId
         });
     }
 
     public void RemovePlayer(string connectionId)
     {
+        Console.WriteLine($"RemovePlayer [{connectionId}]");
         var player = GetPlayer(connectionId);
         if (player != null)
         {
@@ -29,7 +28,11 @@ public class PlayerService(IHubContext<GameHub> hubContext) : IPlayerService
 
     public void MoveToRoom(string connectionId, string roomId)
     {
-        throw new NotImplementedException();
+        var player = GetPlayer(connectionId);
+        if (player != null)
+        {
+            player.PlayerRoom = roomId;
+        }
     }
 
     public List<Player> GetPlayers()
@@ -37,7 +40,7 @@ public class PlayerService(IHubContext<GameHub> hubContext) : IPlayerService
         return _players.Select(x => x.Value).ToList();
     }
 
-    private Player GetPlayer(string key)
+    public Player GetPlayer(string key)
     {
         var isPlayerExist = _players.TryGetValue(key, out var player);
         return isPlayerExist ? player : null;

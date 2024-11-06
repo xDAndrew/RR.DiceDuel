@@ -6,7 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RR.DiceDuel.Components;
 using RR.DiceDuel.Core.Services.AuthService;
+using RR.DiceDuel.Core.Services.ConfigurationSerivce;
 using RR.DiceDuel.Core.Services.PlayerService;
+using RR.DiceDuel.Core.Services.SessionService;
 using RR.DiceDuel.ExternalServices.EntityFramework;
 using RR.DiceDuel.ExternalServices.SignalR;
 
@@ -51,6 +53,9 @@ builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<IPlayerService, PlayerService>();
+builder.Services.AddSingleton<ISessionService, SessionService>();
+
+builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -87,6 +92,8 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 var app = builder.Build();
 
+app.UseStaticFiles();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -106,7 +113,6 @@ app.MapControllers();
 
 app.MapHub<GameHub>("api/game");
 
-app.UseStaticFiles();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();

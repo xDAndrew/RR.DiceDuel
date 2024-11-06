@@ -1,39 +1,34 @@
-﻿@page "/"
+﻿@page "/game/{GameId:guid}"
 @using Blazored.SessionStorage
 @using Microsoft.AspNetCore.SignalR.Client
 @using RR.DiceDuel.Core.Services.AuthService
-@using RR.DiceDuel.Core.Services.SessionService
 @rendermode InteractiveServer
 
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject ISessionStorageService SessionStorage
-@inject ISessionService SessionService
 
 @implements IAsyncDisposable
 
-<PageTitle>Home</PageTitle>
+<h3>Game</h3>
 
-<h1>Hello, @_userName!</h1>
-Welcome to your new app.
-Status: @_message
-
-<div class="d-flex justify-content-center align-items-center vh-100">
-    <button class="btn btn-primary" @onclick="OnButtonClick">Let's Play!</button>
+<div class="game-log-container">
+    <ul>
+        @foreach (var msg in _messages)
+        {
+        <li>@msg"</li>
+        }
+    </ul>
 </div>
 
-@code
-{
-    private string _userName = string.Empty;
-    
+@code {
+    [Parameter]
+    public Guid GameId { get; set; }
     private HubConnection _hubConnection;
-    private string _message = "Waiting connection...";
-
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-    }
-
+    private Timer _timer;
+    
+    private readonly Stack<string> _messages = [];
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -51,35 +46,26 @@ Status: @_message
             }
             
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri("api/game?roomId=Lobby"), options =>
+                .WithUrl(Navigation.ToAbsoluteUri($"api/game?roomId={GameId}"), options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult(token);
                 }).Build();
             
-            _hubConnection.On<string, string>("ReceiveMessage", (user, msg) =>
+            _hubConnection.On<string>("Test", receivedMessage =>
             {
-                _message = $"{user}: {msg}";
+                _messages.Push($"[{DateTime.UtcNow}]:[{receivedMessage}]");
                 InvokeAsync(StateHasChanged);
             });
             
             await _hubConnection.StartAsync();
-            _message = "Connected!";
-            
-            _userName = AuthService.GetUserName(token);
-            StateHasChanged();
         }
-        
+
         await base.OnAfterRenderAsync(firstRender);
-    }
-    
-    private void OnButtonClick()
-    {
-        var sessionId = SessionService.GetOrCreateSession();
-        Navigation.NavigateTo($"/game/{sessionId}");
     }
     
     public async ValueTask DisposeAsync()
     {
+        _timer?.DisposeAsync();
         if (_hubConnection != null)
         {
             await _hubConnection.DisposeAsync();

@@ -81,7 +81,7 @@
             {
                 case AuthStatusType.SUCCESS:
                     await SessionStorage.SetItemAsync("authToken", loginData.Token);
-                    Navigation.NavigateTo("/main");
+                    Navigation.NavigateTo("/");
                     break;
                 case AuthStatusType.WRONG_PASSWORD:
                     ErrorMessage = "Wrong username or password!";
@@ -98,7 +98,7 @@
             {
                 case AuthStatusType.SUCCESS:
                     await SessionStorage.SetItemAsync("authToken", loginData.Token);
-                    Navigation.NavigateTo("/main");
+                    Navigation.NavigateTo("/");
                     break;
                 case AuthStatusType.USER_ALREADY_EXIST:
                     ErrorMessage = "User already exist!";
