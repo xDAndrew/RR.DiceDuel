@@ -1,0 +1,123 @@
+﻿@page "/login"
+@page "/register"
+
+@using Blazored.SessionStorage
+@using RR.DiceDuel.Core.Services.AuthService
+@rendermode InteractiveServer
+
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject ISessionStorageService SessionStorage
+
+<PageTitle>Login</PageTitle>
+
+<div class="container d-flex justify-content-center mt-5">
+    <div class="card p-4">
+        <h3 class="text-center mb-4">@_formTitle</h3>
+        <EditForm FormName="login_form" Model="@_loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @ErrorMessage
+                </div>
+            }
+            
+            <div class="mb-3">
+                <label for="login" class="form-label">Nickname</label>
+                <InputText id="login" class="form-control" @bind-Value="@_loginModel.Login" placeholder="Enter your nickname" />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <InputText id="password" class="form-control" @bind-Value="@_loginModel.Password" placeholder="Enter your password" type="password" />
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">@_title</button>
+            </div>
+        </EditForm>
+        
+        @if (_currentPage == "/login")
+        {
+            <div class="text-center mt-3">
+                <small><a href="#" class="text-muted" @onclick="OnRegisterClick">Register here</a></small>
+            </div>
+        }
+        else
+        {
+            <div class="text-center mt-3">
+                <small><a href="#" class="text-muted" @onclick="OnRegisterClick">Already have account? Login here</a></small>
+            </div>
+        }
+        
+    </div>
+</div>
+
+@code {
+    private readonly LoginModel _loginModel = new();
+    private string ErrorMessage { get; set; } = string.Empty;
+    private string _currentPage = string.Empty;
+
+    private string _title = string.Empty;
+    private string _formTitle = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        var uri = Navigation.Uri;
+        _currentPage = uri.Replace(Navigation.BaseUri, "/");
+        
+        _formTitle = _currentPage == "/login" ? "Login" : "Registration";
+        _title = _currentPage == "/login" ? "Log In" : "Register";
+    }
+
+    private async Task HandleLogin()
+    {
+        if (_currentPage == "/login")
+        {
+            var loginData = await AuthService.LoginAsync(_loginModel.Login, _loginModel.Password);
+            switch (loginData.Status)
+            {
+                case AuthStatusType.SUCCESS:
+                    await SessionStorage.SetItemAsync("authToken", loginData.Token);
+                    Navigation.NavigateTo("/main");
+                    break;
+                case AuthStatusType.WRONG_PASSWORD:
+                    ErrorMessage = "Wrong username or password!";
+                    break;
+                case AuthStatusType.USER_ALREADY_CONNECTED:
+                    ErrorMessage = "User already connected!";
+                    break;
+            }
+        }
+        else
+        {
+            var loginData = await AuthService.RegisterUserAsync(_loginModel.Login, _loginModel.Password);
+            switch (loginData.Status)
+            {
+                case AuthStatusType.SUCCESS:
+                    await SessionStorage.SetItemAsync("authToken", loginData.Token);
+                    Navigation.NavigateTo("/main");
+                    break;
+                case AuthStatusType.USER_ALREADY_EXIST:
+                    ErrorMessage = "User already exist!";
+                    break;
+            }
+        }
+    }
+
+    private void OnRegisterClick()
+    {
+        Navigation.NavigateTo(_currentPage == "/login" ? "/register" : "/login", new NavigationOptions
+        {
+            ForceLoad = true
+        });
+    }
+    
+    public class LoginModel
+    {
+        public string Login { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

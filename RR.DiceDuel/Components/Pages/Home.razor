@@ -1,7 +1,76 @@
 ﻿@page "/"
+@using Blazored.SessionStorage
+@using Microsoft.AspNetCore.SignalR.Client
+@using RR.DiceDuel.Core.Services.AuthService
+@rendermode InteractiveServer
+
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject ISessionStorageService SessionStorage
+
+@implements IAsyncDisposable
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
-
+<h1>Hello, @_userName!</h1>
 Welcome to your new app.
+Status: @_message
+
+@code
+{
+    private string _userName = string.Empty;
+    
+    private HubConnection _hubConnection;
+    private string _message = "Waiting connection...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var token = await SessionStorage.GetItemAsync<string>("authToken");
+
+            var isTokenValid = AuthService.VerifyJwt(token);
+            if (!isTokenValid)
+            {
+                Navigation.NavigateTo("/login", new NavigationOptions
+                {
+                    ForceLoad = true
+                });
+                return;
+            }
+            
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("api/game"), options =>
+                {
+                    options.AccessTokenProvider = () => Task.FromResult(token);
+                }).Build();
+            
+            _hubConnection.On<string, string>("ReceiveMessage", (user, msg) =>
+            {
+                _message = $"{user}: {msg}";
+                InvokeAsync(StateHasChanged);
+            });
+            
+            await _hubConnection.StartAsync();
+            _message = "Подключено!";
+            
+            _userName = AuthService.GetUserName(token);
+            StateHasChanged();
+        }
+        
+        await base.OnAfterRenderAsync(firstRender);
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection != null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+}

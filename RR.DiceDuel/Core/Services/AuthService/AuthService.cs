@@ -3,26 +3,23 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RR.DiceDuel.Core.Services.AuthService.Models;
+using RR.DiceDuel.Core.Services.PlayerService;
 using RR.DiceDuel.ExternalServices.EntityFramework;
 using RR.DiceDuel.ExternalServices.EntityFramework.Entities;
 
 namespace RR.DiceDuel.Core.Services.AuthService;
 
-public class AuthService : IAuthService
+public class AuthService(GameContext gameContext, IPlayerService playerService) : IAuthService
 {
-    private readonly GameContext _gameContext;
-
-    public AuthService(GameContext gameContext)
+    public async Task<LoginData> RegisterUserAsync(string userName, string password)
     {
-        _gameContext = gameContext;
-    }
-
-    public async Task<AuthStatusType> RegisterUserAsync(string userName, string password)
-    {
-        var isUserExist = await _gameContext.Users.AnyAsync(x => x.UserName == userName);
+        var isUserExist = await gameContext.Users.AnyAsync(x => x.UserName == userName);
         if (isUserExist)
         {
-            return AuthStatusType.USER_ALREADY_EXIST;
+            return new LoginData
+            {
+                Status = AuthStatusType.USER_ALREADY_EXIST
+            };
         }
 
         var newUser = new UserEntity
@@ -31,15 +28,21 @@ public class AuthService : IAuthService
             Password = BCrypt.Net.BCrypt.HashPassword(password)
         };
 
-        await _gameContext.Users.AddAsync(newUser);
-        await _gameContext.SaveChangesAsync();
+        await gameContext.Users.AddAsync(newUser);
+        await gameContext.SaveChangesAsync();
 
-        return AuthStatusType.SUCCESS;
+        var token = GenerateJwtToken(userName);
+        
+        return new LoginData
+        {
+            Token = token,
+            Status = AuthStatusType.SUCCESS
+        };
     }
 
     public async Task<LoginData> LoginAsync(string userName, string password)
     {
-        var user = await _gameContext.Users.FirstOrDefaultAsync(x => x.UserName == userName);
+        var user = await gameContext.Users.FirstOrDefaultAsync(x => x.UserName == userName);
         if (user == null)
         {
             return new LoginData
@@ -57,6 +60,14 @@ public class AuthService : IAuthService
             };
         }
 
+        if (playerService.GetPlayers().Any(x => x.Name == userName))
+        {
+            return new LoginData
+            {
+                Status = AuthStatusType.USER_ALREADY_CONNECTED
+            };
+        }
+        
         var token = GenerateJwtToken(userName);
         
         return new LoginData
@@ -65,7 +76,34 @@ public class AuthService : IAuthService
             Status = AuthStatusType.SUCCESS
         };
     }
-    
+
+    public bool VerifyJwt(string jwt)
+    {
+        var handler = new JwtSecurityTokenHandler();
+        if (!handler.CanReadToken(jwt))
+        {
+            return false;
+        }
+        
+        var jwtToken = handler.ReadJwtToken(jwt);
+        var expiryDate = jwtToken.ValidTo;
+        
+        return expiryDate > DateTime.UtcNow;
+    }
+
+    public string GetUserName(string jwt)
+    {
+        var handler = new JwtSecurityTokenHandler();
+        if (!handler.CanReadToken(jwt))
+        {
+            return string.Empty;
+        }
+        
+        var jwtToken = handler.ReadJwtToken(jwt);
+        var userName = jwtToken.Claims.FirstOrDefault(x => x.Type == "unique_name")?.Value;
+        return userName;
+    }
+
     private static string GenerateJwtToken(string username)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
