@@ -1,22 +1,44 @@
 ﻿@page "/game/{GameId:guid}"
+@using System.Text.Json
 @using Blazored.SessionStorage
 @using Microsoft.AspNetCore.SignalR.Client
 @using RR.DiceDuel.Core.Services.AuthService
+@using RR.DiceDuel.Core.Services.SessionService
+@using RR.DiceDuel.Core.Services.SessionService.Models
+@using RR.DiceDuel.Core.Services.SessionService.Types
 @rendermode InteractiveServer
 
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject ISessionStorageService SessionStorage
+@inject ISessionService SessionService
 
 @implements IAsyncDisposable
 
-<h3>Game</h3>
+<div class="text-left mt-3">
+    <small>Room ID: @GameId</small>
+</div>
+
+@if (_gameSession.CurrentState == SessionStateType.WaitingConfirmation)
+{
+    <div class="d-flex justify-content-center align-items-center">
+        <button class="btn btn-primary" @onclick="OnPlayerReady">@_playerReadyButtonText</button>
+    </div>
+}
+
+@if (_gameSession.CurrentState == SessionStateType.GameOngoing && IsMyTurn())
+{
+<div class="d-flex justify-content-center align-items-center">
+    <button class="btn btn-primary" @onclick="OnRoll">Roll Dice</button>
+    <button class="btn btn-primary" @onclick="OnRollSpecial">Roll Special Dice</button>
+</div>
+}
 
 <div class="game-log-container">
     <ul>
-        @foreach (var msg in _messages)
+        @foreach (var msg in _gameSession.GameLog)
         {
-        <li>@msg"</li>
+        <li>@msg</li>
         }
     </ul>
 </div>
@@ -25,9 +47,12 @@
     [Parameter]
     public Guid GameId { get; set; }
     private HubConnection _hubConnection;
-    private Timer _timer;
     
-    private readonly Stack<string> _messages = [];
+    private string _userName = string.Empty;
+
+    private string _playerReadyButtonText = string.Empty;
+
+    private Session _gameSession = new();
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -53,19 +78,44 @@
             
             _hubConnection.On<string>("Test", receivedMessage =>
             {
-                _messages.Push($"[{DateTime.UtcNow}]:[{receivedMessage}]");
+                _gameSession = JsonSerializer.Deserialize<Session>(receivedMessage);
+                
+                var isPlayerReady = _gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false;
+                _playerReadyButtonText = isPlayerReady ? "Not ready!" : "Ready!";
+                
                 InvokeAsync(StateHasChanged);
             });
             
             await _hubConnection.StartAsync();
+            
+            _userName = AuthService.GetUserName(token);
         }
 
         await base.OnAfterRenderAsync(firstRender);
     }
     
+    private void OnPlayerReady()
+    {
+        SessionService.SetPlayerReady(GameId.ToString(), _userName);
+    }
+    
+    private void OnRoll()
+    {
+        SessionService.SetPlayerMove(GameId.ToString(), _userName, "safe");
+    }
+    
+    private void OnRollSpecial()
+    {
+        SessionService.SetPlayerMove(GameId.ToString(), _userName, "special");
+    }
+
+    private bool IsMyTurn()
+    {
+        return _gameSession.CurrentPlayerMove == _userName;
+    }
+    
     public async ValueTask DisposeAsync()
     {
-        _timer?.DisposeAsync();
         if (_hubConnection != null)
         {
             await _hubConnection.DisposeAsync();

@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RR.DiceDuel.Core.Services.SessionService.Models;
+using RR.DiceDuel.Core.StateMachine.Interfaces;
 using RR.DiceDuel.ExternalServices.SignalR;
 
-namespace RR.DiceDuel.Core.Process.GameLoop;
+namespace RR.DiceDuel.Core.Process;
 
 public class GameLoop(IServiceScopeFactory scopeFactory, Session session)
 {
@@ -11,18 +12,16 @@ public class GameLoop(IServiceScopeFactory scopeFactory, Session session)
         Task.Run(async () =>
         {
             await using var scope = scopeFactory.CreateAsyncScope();
-            while (true)
+            var sessionHub = scope.ServiceProvider.GetRequiredService<IHubContext<GameHub>>();
+            var stateMachine = scope.ServiceProvider.GetRequiredService<IStateMachine>();
+
+            var gameOngoing = true;
+            while (gameOngoing)
             {
-                var sessionHub = scope.ServiceProvider.GetRequiredService<IHubContext<GameHub>>();
-                
                 try
                 {
-                    foreach (var player in session.Players)
-                    {
-                        await sessionHub.Clients.Groups(session.SessionId).SendAsync("Test", $"Player in room [{session.SessionId}]: [{player.Name}]");
-                    }
-                
-                    await Task.Delay(1000);
+                    gameOngoing = stateMachine.Update(session);
+                    await Task.Delay(100);
                 }
                 catch (Exception e)
                 {

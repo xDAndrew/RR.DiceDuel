@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RR.DiceDuel.Core.Services.AuthService;
+using RR.DiceDuel.Core.Services.AuthService.Types;
 
 namespace RR.DiceDuel.Controllers;
 

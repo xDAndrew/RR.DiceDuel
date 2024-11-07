@@ -57,3 +57,78 @@ h1:focus {
     border: 1px solid #ccc;
     overflow-x: auto;
 }
+
+.container {
+    margin: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.dice {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+img {
+    width: 100%;
+    height: 100%;
+    margin-bottom: 10px;
+}
+
+.btns {
+    display: flex;
+    gap: 20px;
+}
+
+.btn1:hover,
+.btn2:hover {
+    background-color: red;
+}
+
+.btn1,
+.btn2 {
+    width: 150px;
+    height: 50px;
+    border: none;
+    border-radius: 5px;
+    background-color: blue;
+    color: white;
+    cursor: pointer;
+}
+
+.results {
+    display: flex;
+    gap: 20px;
+}
+
+p {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#diceResult1,
+#diceResult2 {
+    color: blue;
+}
+
+#totalResult {
+    color: green;
+}
+
+.rotate {
+    animation: rotateAnimation 0.5s ease-in-out;
+}
+
+@keyframes rotateAnimation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}

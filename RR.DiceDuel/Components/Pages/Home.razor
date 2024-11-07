@@ -50,22 +50,23 @@ Status: @_message
                 return;
             }
             
-            _hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri("api/game?roomId=Lobby"), options =>
-                {
-                    options.AccessTokenProvider = () => Task.FromResult(token);
-                }).Build();
+            // _hubConnection = new HubConnectionBuilder()
+            //     .WithUrl(Navigation.ToAbsoluteUri("api/game?roomId=Lobby"), options =>
+            //     {
+            //         options.AccessTokenProvider = () => Task.FromResult(token);
+            //     }).Build();
+            //
+            // _hubConnection.On<string, string>("ReceiveMessage", (user, msg) =>
+            // {
+            //     _message = $"{user}: {msg}";
+            //     InvokeAsync(StateHasChanged);
+            // });
+            //
+            // await _hubConnection.StartAsync();
             
-            _hubConnection.On<string, string>("ReceiveMessage", (user, msg) =>
-            {
-                _message = $"{user}: {msg}";
-                InvokeAsync(StateHasChanged);
-            });
-            
-            await _hubConnection.StartAsync();
             _message = "Connected!";
-            
             _userName = AuthService.GetUserName(token);
+            
             StateHasChanged();
         }
         

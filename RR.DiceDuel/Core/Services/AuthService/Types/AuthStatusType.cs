@@ -1,4 +1,4 @@
-﻿namespace RR.DiceDuel.Core.Services.AuthService;
+﻿namespace RR.DiceDuel.Core.Services.AuthService.Types;
 
 public enum AuthStatusType
 {

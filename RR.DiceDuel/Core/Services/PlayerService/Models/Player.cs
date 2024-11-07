@@ -7,8 +7,4 @@ public class Player
     public string Name { get; set; }
     
     public string PlayerRoom { get; set; }
-    
-    public bool IsPlayerReadyToPlay { get; set; }
-    
-    public string LastInput { get; set; }
 }

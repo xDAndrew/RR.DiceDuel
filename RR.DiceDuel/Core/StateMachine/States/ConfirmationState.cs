@@ -4,20 +4,36 @@ using RR.DiceDuel.Core.StateMachine.Interfaces;
 
 namespace RR.DiceDuel.Core.StateMachine.States;
 
-public class ConfirmationState : IGameState
+public class ConfirmationState : GameState
 {
-    public bool UpdateState(Session sessionContext, out IGameState nextState, out string message)
+    private int _timeUntilStartSec = 50; 
+    
+    public override void UpdateState(Session sessionContext, ref GameState nextState)
     {
-        sessionContext.CurrentState = SessionStateType.WaitingConfirmation;
-        if (sessionContext.Players.All(x => x.IsPlayerReadyToPlay))
+        if (!IsAllPlayersConnect(sessionContext))
         {
-            message = null;
-            nextState = null;
-            return true;
+            nextState = new FinishState();
+            return;
         }
+        
+        sessionContext.CurrentState = SessionStateType.WaitingConfirmation;
+        if (sessionContext.PlayerStatus.All(x => x.IsPlayerReady))
+        {
+            if (_timeUntilStartSec == 0)
+            {
+                nextState = new GameOngoingState();
+            }
 
-        message = null;
-        nextState = null;
-        return false;
+            if (_timeUntilStartSec % 10 == 0)
+            {
+                sessionContext.GameLog.Push($"The game will start in {_timeUntilStartSec / 10} seconds");
+            }
+            
+            _timeUntilStartSec--;
+        }
+        else
+        {
+            _timeUntilStartSec = 50;
+        }
     }
 }

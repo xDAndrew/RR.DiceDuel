@@ -1,4 +1,6 @@
-﻿namespace RR.DiceDuel.Core.Services.AuthService.Models;
+﻿using RR.DiceDuel.Core.Services.AuthService.Types;
+
+namespace RR.DiceDuel.Core.Services.AuthService.Models;
 
 public class LoginData
 {

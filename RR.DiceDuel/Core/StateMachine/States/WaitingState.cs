@@ -1,21 +1,21 @@
 ﻿using RR.DiceDuel.Core.Services.SessionService.Models;
+using RR.DiceDuel.Core.Services.SessionService.Types;
 using RR.DiceDuel.Core.StateMachine.Interfaces;
 
 namespace RR.DiceDuel.Core.StateMachine.States;
 
-public class WaitingState : IGameState
+public class WaitingState : GameState
 {
-    public bool UpdateState(Session sessionContext, out IGameState nextState, out string message)
+    public override void UpdateState(Session sessionContext, ref GameState nextState)
     {
-        if (sessionContext.Players.Count == sessionContext.GameConfig.RoomMaxPlayer)
+        sessionContext.CurrentState = SessionStateType.Started;
+        
+        if (!IsAllPlayersConnect(sessionContext))
         {
-            message = "Waiting is full";
-            nextState = new ConfirmationState();
-            return true;
+            return;
         }
-
-        message = null;
-        nextState = null;
-        return false;
+        
+        sessionContext.GameLog.Push("The room is full. We are waiting for confirmation about the start of the game.");
+        nextState = new PrepareGameState();
     }
 }

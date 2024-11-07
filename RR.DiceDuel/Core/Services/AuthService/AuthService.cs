@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RR.DiceDuel.Core.Services.AuthService.Models;
+using RR.DiceDuel.Core.Services.AuthService.Types;
 using RR.DiceDuel.Core.Services.PlayerService;
 using RR.DiceDuel.ExternalServices.EntityFramework;
 using RR.DiceDuel.ExternalServices.EntityFramework.Entities;

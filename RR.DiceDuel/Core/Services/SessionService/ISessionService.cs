@@ -11,4 +11,8 @@ public interface ISessionService
     void LeaveRoom(string sessionId, string player);
     
     List<Session> GetSessions();
+
+    void SetPlayerReady(string sessionId, string playerName);
+    
+    void SetPlayerMove(string sessionId, string playerName, string move);
 }

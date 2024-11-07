@@ -9,6 +9,8 @@ using RR.DiceDuel.Core.Services.AuthService;
 using RR.DiceDuel.Core.Services.ConfigurationSerivce;
 using RR.DiceDuel.Core.Services.PlayerService;
 using RR.DiceDuel.Core.Services.SessionService;
+using RR.DiceDuel.Core.StateMachine;
+using RR.DiceDuel.Core.StateMachine.Interfaces;
 using RR.DiceDuel.ExternalServices.EntityFramework;
 using RR.DiceDuel.ExternalServices.SignalR;
 
@@ -51,11 +53,11 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddSignalR();
+builder.Services.AddScoped<IStateMachine, StateMachine>();
 
 builder.Services.AddSingleton<IPlayerService, PlayerService>();
 builder.Services.AddSingleton<ISessionService, SessionService>();
-
-builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
+builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
 
 builder.Services.AddAuthentication(options =>
     {
