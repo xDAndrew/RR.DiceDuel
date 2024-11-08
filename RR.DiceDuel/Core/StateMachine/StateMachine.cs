@@ -1,37 +1,20 @@
-﻿using System.Text.Json;
-using Microsoft.AspNetCore.SignalR;
-using RR.DiceDuel.Core.Services.SessionService.Models;
-using RR.DiceDuel.Core.Services.SessionService.Types;
-using RR.DiceDuel.Core.StateMachine.Interfaces;
+﻿using RR.DiceDuel.Core.StateMachine.Interfaces;
 using RR.DiceDuel.Core.StateMachine.States;
-using RR.DiceDuel.ExternalServices.SignalR;
 
 namespace RR.DiceDuel.Core.StateMachine;
 
-public class StateMachine(IHubContext<GameHub> hubContext) : IStateMachine
+public class StateMachine : IStateMachine
 {
     private GameState _currentState = new WaitingState();
-    private GameState _nextState;
     
-    public bool Update(Session gameContext)
+    public bool Update(string sessionId, AsyncServiceScope scope)
     {
-        _currentState.UpdateState(gameContext, ref _nextState);
-        if (_nextState != null)
+        var nextState = _currentState.UpdateState(sessionId, scope);
+        if (nextState != null)
         {
-            _currentState = _nextState;
-            _nextState = null;
-        }
-
-        var json = JsonSerializer.Serialize(gameContext);
-        hubContext.Clients.Groups(gameContext.SessionId).SendAsync("Test", json);
-
-        if (gameContext.CurrentState != SessionStateType.Finish)
-        {
-            return true;
+            _currentState = nextState;
         }
         
-        // Finish game
-        hubContext.Clients.Groups(gameContext.SessionId).SendAsync("Test", "Game finished!");
-        return false;
+        return _currentState is FinishState;
     }
 }

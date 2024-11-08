@@ -1,8 +1,6 @@
-﻿using RR.DiceDuel.Core.Services.SessionService.Models;
-
-namespace RR.DiceDuel.Core.StateMachine.Interfaces;
+﻿namespace RR.DiceDuel.Core.StateMachine.Interfaces;
 
 public interface IStateMachine
 {
-    bool Update(Session gameContext);
+    bool Update(string sessionId, AsyncServiceScope scope);
 }

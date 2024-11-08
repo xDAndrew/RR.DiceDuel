@@ -5,12 +5,12 @@ namespace RR.DiceDuel.Core.Services.PlayerService;
 
 public class PlayerService : IPlayerService
 {
-    private readonly ConcurrentDictionary<string, Player> _players = new();
+    private static readonly ConcurrentDictionary<string, Player> PlayersCollection = new();
 
     public void AddPlayer(string connectionId, string playerName, string roomId)
     {
         Console.WriteLine($"AddPlayer id: [{connectionId}] name: [{playerName}]; room: [{roomId}]");
-        _players.TryAdd(connectionId, new Player
+        PlayersCollection.TryAdd(connectionId, new Player
         {
             Id = connectionId, Name = playerName, PlayerRoom = roomId
         });
@@ -22,27 +22,18 @@ public class PlayerService : IPlayerService
         var player = GetPlayer(connectionId);
         if (player != null)
         {
-            _players.Remove(connectionId, out _);
-        }
-    }
-
-    public void MoveToRoom(string connectionId, string roomId)
-    {
-        var player = GetPlayer(connectionId);
-        if (player != null)
-        {
-            player.PlayerRoom = roomId;
+            PlayersCollection.Remove(connectionId, out _);
         }
     }
 
     public List<Player> GetPlayers()
     {
-        return _players.Select(x => x.Value).ToList();
+        return PlayersCollection.Select(x => x.Value).ToList();
     }
 
     public Player GetPlayer(string key)
     {
-        var isPlayerExist = _players.TryGetValue(key, out var player);
+        var isPlayerExist = PlayersCollection.TryGetValue(key, out var player);
         return isPlayerExist ? player : null;
     }
 }

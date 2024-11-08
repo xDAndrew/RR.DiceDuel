@@ -1,4 +1,5 @@
-﻿using RR.DiceDuel.Core.Services.SessionService.Models;
+﻿using RR.DiceDuel.Core.Controllers.GameController;
+using RR.DiceDuel.Core.Services.GameLogService;
 using RR.DiceDuel.Core.Services.SessionService.Types;
 using RR.DiceDuel.Core.StateMachine.Interfaces;
 
@@ -6,34 +7,36 @@ namespace RR.DiceDuel.Core.StateMachine.States;
 
 public class ConfirmationState : GameState
 {
-    private int _timeUntilStartSec = 50; 
+    private int _stepsUntilStart = 50; //1 step -> 100 ms
     
-    public override void UpdateState(Session sessionContext, ref GameState nextState)
+    public override GameState UpdateState(string sessionId, AsyncServiceScope scope)
     {
-        if (!IsAllPlayersConnect(sessionContext))
+        var gameController = scope.ServiceProvider.GetRequiredService<IGameController>();
+        var gameLogger = scope.ServiceProvider.GetRequiredService<IGameLogService>();
+        
+        if (!gameController.IsRoomFull(sessionId))
         {
-            nextState = new FinishState();
-            return;
+            return new WaitingState();
         }
         
-        sessionContext.CurrentState = SessionStateType.WaitingConfirmation;
-        if (sessionContext.PlayerStatus.All(x => x.IsPlayerReady))
+        gameController.SetSessionState(sessionId, SessionStateType.WaitingConfirmation);
+        
+        if (gameController.IsAllPlayersReady(sessionId))
         {
-            if (_timeUntilStartSec == 0)
+            if (_stepsUntilStart == 0)
             {
-                nextState = new GameOngoingState();
+                return new GameOngoingState();
             }
-
-            if (_timeUntilStartSec % 10 == 0)
+        
+            if (_stepsUntilStart % 10 == 0)
             {
-                sessionContext.GameLog.Push($"The game will start in {_timeUntilStartSec / 10} seconds");
+                gameLogger.LogInfo(sessionId, $"The game will start in {_stepsUntilStart / 10} seconds");
             }
             
-            _timeUntilStartSec--;
+            _stepsUntilStart--;
         }
-        else
-        {
-            _timeUntilStartSec = 50;
-        }
+        
+        _stepsUntilStart = 50;
+        return null;
     }
 }

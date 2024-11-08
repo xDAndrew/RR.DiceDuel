@@ -1,10 +1,12 @@
-﻿namespace RR.DiceDuel.Core.Services.StatisticService;
+﻿namespace RR.DiceDuel.Core.Services.StatisticService.Models;
 
 public class Statistic
 {
     public long GamesCount { get; set; }
     
     public long Wins { get; set; }
+    
+    public long Draw { get; set; }
     
     public long Defeats { get; set; }
     

@@ -1,4 +1,5 @@
-﻿using RR.DiceDuel.Core.Services.SessionService.Models;
+﻿using RR.DiceDuel.Core.Controllers.GameController;
+using RR.DiceDuel.Core.Services.GameLogService;
 using RR.DiceDuel.Core.Services.SessionService.Types;
 using RR.DiceDuel.Core.StateMachine.Interfaces;
 
@@ -6,16 +7,28 @@ namespace RR.DiceDuel.Core.StateMachine.States;
 
 public class WaitingState : GameState
 {
-    public override void UpdateState(Session sessionContext, ref GameState nextState)
+    private int _stepsBeforeCloseSession = 3000; // 5 min (1 step - 100 ms)
+    
+    public override GameState UpdateState(string sessionId, AsyncServiceScope scope)
     {
-        sessionContext.CurrentState = SessionStateType.Started;
+        var gameController = scope.ServiceProvider.GetRequiredService<IGameController>();
+        var gameLogger = scope.ServiceProvider.GetRequiredService<IGameLogService>();
         
-        if (!IsAllPlayersConnect(sessionContext))
+        gameController.SetSessionState(sessionId, SessionStateType.Started);
+
+        if (!gameController.IsRoomFull(sessionId))
         {
-            return;
+            _stepsBeforeCloseSession--;
+            return null;
         }
         
-        sessionContext.GameLog.Push("The room is full. We are waiting for confirmation about the start of the game.");
-        nextState = new PrepareGameState();
+        gameLogger.LogInfo(sessionId, "The room is full. We are waiting for confirmation about the start of the game.");
+
+        if (_stepsBeforeCloseSession == 0)
+        {
+            return new FinishState();
+        } 
+        
+        return new PrepareGameState();
     }
 }

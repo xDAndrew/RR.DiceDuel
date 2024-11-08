@@ -2,8 +2,8 @@
 @using System.Text.Json
 @using Blazored.SessionStorage
 @using Microsoft.AspNetCore.SignalR.Client
+@using RR.DiceDuel.Core.Controllers.PlayerController
 @using RR.DiceDuel.Core.Services.AuthService
-@using RR.DiceDuel.Core.Services.SessionService
 @using RR.DiceDuel.Core.Services.SessionService.Models
 @using RR.DiceDuel.Core.Services.SessionService.Types
 @rendermode InteractiveServer
@@ -11,7 +11,7 @@
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject ISessionStorageService SessionStorage
-@inject ISessionService SessionService
+@inject IPlayerController PlayerController
 
 @implements IAsyncDisposable
 
@@ -36,9 +36,9 @@
 
 <div class="game-log-container">
     <ul>
-        @foreach (var msg in _gameSession.GameLog)
+        @foreach (var msg in _gameLog)
         {
-        <li>@msg</li>
+            <li>@msg</li>
         }
     </ul>
 </div>
@@ -53,7 +53,9 @@
     private string _playerReadyButtonText = string.Empty;
 
     private Session _gameSession = new();
-    
+
+    private readonly Stack<string> _gameLog = new();
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -76,13 +78,19 @@
                     options.AccessTokenProvider = () => Task.FromResult(token);
                 }).Build();
             
-            _hubConnection.On<string>("Test", receivedMessage =>
+            _hubConnection.On<string>("UpdateSession", receivedMessage =>
             {
                 _gameSession = JsonSerializer.Deserialize<Session>(receivedMessage);
                 
                 var isPlayerReady = _gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false;
                 _playerReadyButtonText = isPlayerReady ? "Not ready!" : "Ready!";
                 
+                InvokeAsync(StateHasChanged);
+            });
+            
+            _hubConnection.On<string>("LogInfo", receivedMessage =>
+            {
+                _gameLog.Push(receivedMessage);
                 InvokeAsync(StateHasChanged);
             });
             
@@ -96,22 +104,22 @@
     
     private void OnPlayerReady()
     {
-        SessionService.SetPlayerReady(GameId.ToString(), _userName);
+        PlayerController.SetPlayerReady(GameId.ToString(), _userName);
     }
     
     private void OnRoll()
     {
-        SessionService.SetPlayerMove(GameId.ToString(), _userName, "safe");
+        PlayerController.SetRoll(GameId.ToString());
     }
     
     private void OnRollSpecial()
     {
-        SessionService.SetPlayerMove(GameId.ToString(), _userName, "special");
+        PlayerController.SetSpecialRoll(GameId.ToString());
     }
 
     private bool IsMyTurn()
     {
-        return _gameSession.CurrentPlayerMove == _userName;
+        return PlayerController.CurrentPlayerMoveName(GameId.ToString()) == _userName;
     }
     
     public async ValueTask DisposeAsync()

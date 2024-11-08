@@ -8,8 +8,6 @@ public interface IPlayerService
     
     void RemovePlayer(string connectionId);
 
-    void MoveToRoom(string connectionId, string roomId);
-
     List<Player> GetPlayers();
 
     Player GetPlayer(string connectionId);

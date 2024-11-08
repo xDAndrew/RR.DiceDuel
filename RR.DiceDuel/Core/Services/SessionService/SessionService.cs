@@ -1,29 +1,27 @@
 ﻿using System.Collections.Concurrent;
-using RR.DiceDuel.Core.Process;
 using RR.DiceDuel.Core.Services.ConfigurationSerivce;
 using RR.DiceDuel.Core.Services.PlayerService;
 using RR.DiceDuel.Core.Services.SessionService.Models;
 using RR.DiceDuel.Core.Services.SessionService.Types;
-using RR.DiceDuel.Core.Services.StatisticService;
+using RR.DiceDuel.Core.Services.StatisticService.Models;
+using RR.DiceDuel.Core.StateMachine;
 
 namespace RR.DiceDuel.Core.Services.SessionService;
 
 public class SessionService(IPlayerService playerService, IServiceScopeFactory scopeFactory, 
     IConfigurationService configurationService) : ISessionService
 {
-    private readonly ConcurrentDictionary<string, Session> _session = new();
+    private static readonly ConcurrentDictionary<string, Session> SessionCollection = new();
     
     public string GetOrCreateSession()
     {
         var config = configurationService.GetConfiguration();
-        
-        // Clean up sessions data
-        CleanUpSessions();
-        
+
         // Find empty room
         var sessions = GetSessions();
         var emptyRoom = sessions.FirstOrDefault(x => x.PlayerStatus.Count < config.RoomMaxPlayer 
             && x.CurrentState == SessionStateType.Started);
+        
         if (emptyRoom != null)
         {
             return emptyRoom.SessionId;
@@ -34,12 +32,11 @@ public class SessionService(IPlayerService playerService, IServiceScopeFactory s
         var newSession = new Session
         {
             SessionId = newSessionId,
-            PlayerStatus = [],
-            GameConfig = config
+            PlayerStatus = []
         };
-        _session.TryAdd(newSessionId, newSession);
+        SessionCollection.TryAdd(newSessionId, newSession);
 
-        var gameLoop = new GameLoop(scopeFactory, newSession);
+        var gameLoop = new GameLoop(scopeFactory, newSession.SessionId);
         gameLoop.Invoke();
         
         return newSessionId;
@@ -79,57 +76,19 @@ public class SessionService(IPlayerService playerService, IServiceScopeFactory s
         }
     }
     
-    private Session GetSession(string key)
+    public Session GetSession(string key)
     {
-        var isSessionExist = _session.TryGetValue(key, out var session);
+        var isSessionExist = SessionCollection.TryGetValue(key, out var session);
         return isSessionExist ? session : null;
     }
-    
+
+    public void RemoveRoom(string sessionId)
+    {
+        SessionCollection.TryRemove(sessionId, out _);
+    }
+
     public List<Session> GetSessions()
     {
-        return _session.Select(x => x.Value).ToList();
-    }
-
-    public void SetPlayerReady(string sessionId, string playerName)
-    {
-        var session = GetSession(sessionId);
-        if (session is null)
-        {
-            return;
-        }
-
-        var player = session.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == playerName);
-        if (player is null)
-        {
-            return;
-        }
-
-        player.IsPlayerReady = !player.IsPlayerReady;
-    }
-
-    public void SetPlayerMove(string sessionId, string playerName, string move)
-    {
-        var session = GetSession(sessionId);
-        if (session is null)
-        {
-            return;
-        }
-
-        var player = session.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == playerName);
-        if (player is null)
-        {
-            return;
-        }
-
-        player.LastInput = move;
-    }
-
-    private void CleanUpSessions()
-    {
-        var sessions = _session.Where(x => x.Value.CurrentState == SessionStateType.Finish);
-        foreach (var session in sessions)
-        {
-            _session.TryRemove(session.Key, out _);
-        }
+        return SessionCollection.Select(x => x.Value).ToList();
     }
 }

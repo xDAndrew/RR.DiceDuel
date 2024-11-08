@@ -1,23 +1,14 @@
-﻿using RR.DiceDuel.Core.Services.SessionService.Models;
-using RR.DiceDuel.Core.Services.StatisticService;
+﻿using RR.DiceDuel.Core.Controllers.GameController;
 using RR.DiceDuel.Core.StateMachine.Interfaces;
 
 namespace RR.DiceDuel.Core.StateMachine.States;
 
 public class PrepareGameState : GameState
 {
-    public override void UpdateState(Session sessionContext, ref GameState nextState)
+    public override GameState UpdateState(string sessionId, AsyncServiceScope scope)
     {
-        sessionContext.CurrentPlayerMove = null;
-        sessionContext.CurrentRound = 0;
-        foreach (var player in sessionContext.PlayerStatus)
-        {
-            player.IsPlayerReady = false;
-            player.IsPlayerLost = false;
-            player.GameStatistic = new Statistic();
-            player.LastInput = null;
-        }
-
-        nextState = new ConfirmationState();
+        var gameController = scope.ServiceProvider.GetRequiredService<IGameController>();
+        gameController.CleanUpSessionForNewGame(sessionId);
+        return new ConfirmationState();
     }
 }

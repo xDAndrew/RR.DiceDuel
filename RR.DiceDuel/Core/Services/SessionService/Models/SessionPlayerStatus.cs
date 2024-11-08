@@ -1,5 +1,5 @@
 ﻿using RR.DiceDuel.Core.Services.PlayerService.Models;
-using RR.DiceDuel.Core.Services.StatisticService;
+using RR.DiceDuel.Core.Services.StatisticService.Models;
 
 namespace RR.DiceDuel.Core.Services.SessionService.Models;
 

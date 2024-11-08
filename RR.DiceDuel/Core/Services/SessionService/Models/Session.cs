@@ -1,6 +1,4 @@
-﻿using RR.DiceDuel.Core.Services.ConfigurationSerivce.Models;
-using RR.DiceDuel.Core.Services.SessionService.Types;
-using RR.DiceDuel.Core.Services.StatisticService;
+﻿using RR.DiceDuel.Core.Services.SessionService.Types;
 
 namespace RR.DiceDuel.Core.Services.SessionService.Models;
 
@@ -12,13 +10,7 @@ public class Session
     
     public int CurrentRound { get; set; }
 
-    public string CurrentPlayerMove { get; set; }
+    public int CurrentPlayer { get; set; }
     
     public List<SessionPlayerStatus> PlayerStatus { get; set; }
-    
-    public AppConfiguration GameConfig { get; set; }
-
-    public Stack<string> GameLog { get; set; } = [];
-    
-    public List<Statistic> GameResults  { get; set; } = [];
 }

@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RR.DiceDuel.Components;
+using RR.DiceDuel.Core.Controllers.GameController;
+using RR.DiceDuel.Core.Controllers.PlayerController;
 using RR.DiceDuel.Core.Services.AuthService;
 using RR.DiceDuel.Core.Services.ConfigurationSerivce;
 using RR.DiceDuel.Core.Services.PlayerService;
@@ -55,9 +57,12 @@ builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IStateMachine, StateMachine>();
 
-builder.Services.AddSingleton<IPlayerService, PlayerService>();
-builder.Services.AddSingleton<ISessionService, SessionService>();
-builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
+builder.Services.AddScoped<IPlayerService, PlayerService>();
+builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
+
+builder.Services.AddScoped<IGameController, GameController>();
+builder.Services.AddScoped<IPlayerController, PlayerController>();
 
 builder.Services.AddAuthentication(options =>
     {

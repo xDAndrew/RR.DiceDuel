@@ -1,98 +1,40 @@
-﻿using RR.DiceDuel.Core.Services.SessionService.Models;
+﻿using RR.DiceDuel.Core.Controllers.GameController;
+using RR.DiceDuel.Core.Services.ConfigurationSerivce;
+using RR.DiceDuel.Core.Services.GameLogService;
 using RR.DiceDuel.Core.Services.SessionService.Types;
 using RR.DiceDuel.Core.StateMachine.Interfaces;
-using RR.DiceDuel.ExternalServices.EntityFramework;
 
 namespace RR.DiceDuel.Core.StateMachine.States;
 
 public class GameOngoingState : GameState
 {
-    private int _round;
-    private int _currentPlayerTurn;
-
-    private readonly Random _random = new(Guid.NewGuid().GetHashCode());
-    
-    public override void UpdateState(Session sessionContext, ref GameState nextState)
+    public override GameState UpdateState(string sessionId, AsyncServiceScope scope)
     {
-        if (!IsAllPlayersConnect(sessionContext))
-        {
-            nextState = new FinishState();
-            return;
-        }
+        var gameController = scope.ServiceProvider.GetRequiredService<IGameController>();
+        var logger = scope.ServiceProvider.GetRequiredService<IGameLogService>();
+        var gameConfig = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
 
-        sessionContext.CurrentState = SessionStateType.GameOngoing;
+        gameController.SetSessionState(sessionId, SessionStateType.GameOngoing);
         
-        // Если остался только 1 игрок который не проиграл
-        if (sessionContext.PlayerStatus.Where(x => !x.IsPlayerLost).ToList().Count == 1)
+        if (!gameController.IsRoomFull(sessionId))
         {
-            nextState = new ResultCalculationState();
-            sessionContext.GameLog.Push("This match is over");
+            return new WaitingState();
+        }
+
+        // If there is 1 player left in the game
+        if (gameController.IsLastPlayer(sessionId))
+        {
+            logger.LogInfo(sessionId, "This match is over");
+            return new ResultCalculationState();
+        }
+
+        // Last round
+        if (gameController.GetCurrentRound(sessionId) == gameConfig.GetConfiguration().MaxGameRound)
+        {
+            logger.LogInfo(sessionId, "This match is over");
+            return new ResultCalculationState();
         }
         
-        if (_currentPlayerTurn == sessionContext.GameConfig.RoomMaxPlayer)
-        {
-            // раунд сыгран
-            _round++;
-            _currentPlayerTurn = 0;
-            
-            if (_round == sessionContext.GameConfig.MaxGameRound)
-            {
-                // игра сыграна, можно перейти к подсчету результатов
-                nextState = new ResultCalculationState();
-                sessionContext.GameLog.Push("This match is over");
-            }
-        }
-        else
-        {
-            sessionContext.CurrentPlayerMove = sessionContext.PlayerStatus[_currentPlayerTurn].PlayerInfo.Name;
-            var playerInput = sessionContext.PlayerStatus[_currentPlayerTurn].LastInput;
-            
-            if (string.IsNullOrWhiteSpace(playerInput))
-            {
-                return;
-            }
-
-            var playerResult = 0;
-            switch (playerInput)
-            {
-                case "safe":
-                    // Бросаем 3 кубика
-                    var firstDice = _random.Next(1, 7);
-                    var secondDice = _random.Next(1, 7);
-                    var thirdDice = _random.Next(1, 7);
-                    playerResult = firstDice + secondDice + thirdDice;
-                    
-                    sessionContext.PlayerStatus[_currentPlayerTurn].GameStatistic.NormalRolled++;
-                    
-                    sessionContext.GameLog.Push($"The player rolled 3 dice: [{firstDice}] [{secondDice}] [{thirdDice}]. Total {playerResult} score(s)");
-                    break;
-                
-                case "special":
-                    // Бросаем один специальный кубик
-                    playerResult = _random.Next(1, 7);
-                    sessionContext.PlayerStatus[_currentPlayerTurn].GameStatistic.SpecialRolled++;
-                    
-                    if (playerResult == 6)
-                    {
-                        playerResult = 24;
-                        sessionContext.PlayerStatus[_currentPlayerTurn].GameStatistic.GotMaxScore++;
-                    }
-
-                    if (playerResult == 1)
-                    {
-                        sessionContext.PlayerStatus[_currentPlayerTurn].GameStatistic.GotZeroScore++;
-                        sessionContext.PlayerStatus[_currentPlayerTurn].IsPlayerLost = true;
-                    }
-                    
-                    sessionContext.GameLog.Push($"The player rolled 1 special dice: [{playerResult}]");
-                    break;
-            }
-            
-            sessionContext.PlayerStatus[_currentPlayerTurn].GameStatistic.TotalScores += playerResult;
-            
-            // Игрок походил, переходим к следующему
-            sessionContext.PlayerStatus[_currentPlayerTurn].LastInput = null;
-            _currentPlayerTurn++;
-        }
+        return null;
     }
 }

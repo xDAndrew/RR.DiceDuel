@@ -12,7 +12,7 @@ public interface ISessionService
     
     List<Session> GetSessions();
 
-    void SetPlayerReady(string sessionId, string playerName);
-    
-    void SetPlayerMove(string sessionId, string playerName, string move);
+    Session GetSession(string key);
+
+    void RemoveRoom(string sessionId);
 }
