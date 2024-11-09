@@ -29,11 +29,9 @@ public class GameLoop(IServiceScopeFactory scopeFactory, string sessionId)
                     logger.LogInfo(sessionId, $"ERROR: [{ex.Message}]");
                     break;
                 }
-                finally
-                {
-                    sessionService.RemoveRoom(sessionId);
-                }
             }
+            
+            sessionService.RemoveRoom(sessionId);
         });
     }
 }

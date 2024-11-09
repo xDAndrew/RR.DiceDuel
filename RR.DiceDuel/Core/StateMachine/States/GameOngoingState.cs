@@ -13,7 +13,7 @@ public class GameOngoingState : GameState
         var gameController = scope.ServiceProvider.GetRequiredService<IGameController>();
         var logger = scope.ServiceProvider.GetRequiredService<IGameLogService>();
         var gameConfig = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
-
+        
         gameController.SetSessionState(sessionId, SessionStateType.GameOngoing);
         
         if (!gameController.IsRoomFull(sessionId))

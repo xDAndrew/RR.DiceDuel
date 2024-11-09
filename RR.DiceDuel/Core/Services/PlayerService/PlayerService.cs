@@ -9,7 +9,6 @@ public class PlayerService : IPlayerService
 
     public void AddPlayer(string connectionId, string playerName, string roomId)
     {
-        Console.WriteLine($"AddPlayer id: [{connectionId}] name: [{playerName}]; room: [{roomId}]");
         PlayersCollection.TryAdd(connectionId, new Player
         {
             Id = connectionId, Name = playerName, PlayerRoom = roomId
@@ -18,7 +17,6 @@ public class PlayerService : IPlayerService
 
     public void RemovePlayer(string connectionId)
     {
-        Console.WriteLine($"RemovePlayer [{connectionId}]");
         var player = GetPlayer(connectionId);
         if (player != null)
         {
@@ -28,7 +26,7 @@ public class PlayerService : IPlayerService
 
     public List<Player> GetPlayers()
     {
-        return PlayersCollection.Select(x => x.Value).ToList();
+        return PlayersCollection.Values.ToList();
     }
 
     public Player GetPlayer(string key)

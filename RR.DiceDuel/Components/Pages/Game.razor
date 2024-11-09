@@ -12,36 +12,53 @@
 @inject NavigationManager Navigation
 @inject ISessionStorageService SessionStorage
 @inject IPlayerController PlayerController
+@inject IJSRuntime Js
 
 @implements IAsyncDisposable
 
-<div class="text-left mt-3">
-    <small>Room ID: @GameId</small>
-</div>
-
-@if (_gameSession.CurrentState == SessionStateType.WaitingConfirmation)
+@if (_gameSession.CurrentState == SessionStateType.Started)
 {
-    <div class="d-flex justify-content-center align-items-center">
-        <button class="btn btn-primary" @onclick="OnPlayerReady">@_playerReadyButtonText</button>
+    <div class="waiting-container">
+        <div class="dice-spinner">
+            <div class="dot dot-center"></div>
+            <div class="dot dot-top-left"></div>
+            <div class="dot dot-top-right"></div>
+            <div class="dot dot-bottom-left"></div>
+            <div class="dot dot-bottom-right"></div>
+        </div>
+        <div>Waiting for other players</div>
     </div>
 }
-
-@if (_gameSession.CurrentState == SessionStateType.GameOngoing && IsMyTurn())
+else
 {
-<div class="d-flex justify-content-center align-items-center">
-    <button class="btn btn-primary" @onclick="OnRoll">Roll Dice</button>
-    <button class="btn btn-primary" @onclick="OnRollSpecial">Roll Special Dice</button>
-</div>
-}
+    <div class="text-left mt-3">
+        <small>Room ID: @GameId</small>
+    </div>
 
-<div class="game-log-container">
-    <ul>
-        @foreach (var msg in _gameLog)
-        {
-            <li>@msg</li>
-        }
-    </ul>
-</div>
+    @if (_gameSession.CurrentState == SessionStateType.WaitingConfirmation)
+    {
+        <div class="d-flex justify-content-center align-items-center">
+            <button class="btn btn-primary" @onclick="OnPlayerReady">@_playerReadyButtonText</button>
+        </div>
+    }
+
+    @if (_gameSession.CurrentState == SessionStateType.GameOngoing && IsMyTurn())
+    {
+        <div class="d-flex justify-content-center align-items-center">
+            <button class="btn btn-primary" @onclick="OnRoll">Roll Dice</button>
+            <button class="btn btn-primary" @onclick="OnRollSpecial">Roll Special Dice</button>
+        </div>
+    }
+
+    <div class="game-log-container">
+        <ul>
+            @foreach (var msg in _gameLog)
+            {
+                <li>@msg</li>
+            }
+        </ul>
+    </div>
+}
 
 @code {
     [Parameter]
@@ -109,17 +126,24 @@
     
     private void OnRoll()
     {
+        _ = PlaySound();
         PlayerController.SetRoll(GameId.ToString());
     }
     
     private void OnRollSpecial()
     {
+        _ = PlaySound();
         PlayerController.SetSpecialRoll(GameId.ToString());
     }
 
     private bool IsMyTurn()
     {
         return PlayerController.CurrentPlayerMoveName(GameId.ToString()) == _userName;
+    }
+    
+    private async Task PlaySound()
+    {
+        await Js.InvokeVoidAsync("playSound", "/content/roll.mp3");
     }
     
     public async ValueTask DisposeAsync()

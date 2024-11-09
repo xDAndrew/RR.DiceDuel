@@ -5,6 +5,7 @@ public enum SessionStateType
     Started, 
     WaitingConfirmation, 
     GameOngoing, 
-    ResultCalculation, 
+    ResultCalculation,
+    ShowResult,
     Finish
 }

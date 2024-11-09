@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 using RR.DiceDuel.Core.Services.ConfigurationSerivce;
+using RR.DiceDuel.Core.Services.GameLogService;
 using RR.DiceDuel.Core.Services.SessionService;
 using RR.DiceDuel.Core.Services.SessionService.Models;
 using RR.DiceDuel.ExternalServices.SignalR;
@@ -8,7 +9,7 @@ using RR.DiceDuel.ExternalServices.SignalR;
 namespace RR.DiceDuel.Core.Controllers.PlayerController;
 
 public class PlayerController(ISessionService sessionService, IConfigurationService configurationService, 
-    IHubContext<GameHub> gameHub) : IPlayerController
+    IHubContext<GameHub> gameHub, IGameLogService logService) : IPlayerController
 {
     private readonly Random _random = new(Guid.NewGuid().GetHashCode());
     
@@ -25,13 +26,15 @@ public class PlayerController(ISessionService sessionService, IConfigurationServ
         NotifyPlayers(session);
         
         player.IsPlayerReady = !player.IsPlayerReady;
+        var message = player.IsPlayerReady ? $"Player {playerName} is ready to start the game" : $"Player {playerName} has canceled readiness";
+        logService.LogInfo(sessionId, message);
     }
 
     public List<int> SetRoll(string sessionId)
     {
         var session = sessionService.GetSession(sessionId);
         
-        var result = new List<int>
+        var result = new List<int>(3)
         {
             _random.Next(1, 7),
             _random.Next(1, 7),
@@ -49,7 +52,9 @@ public class PlayerController(ISessionService sessionService, IConfigurationServ
         {
             session.CurrentRound++;
         }
-        
+
+        var message = $"Player {session.PlayerStatus[currentPlayerIndex].PlayerInfo.Name} rolled the dice. [{result[0]}][{result[1]}][{result[2]}]. Total score: {result.Sum()}";
+        logService.LogInfo(sessionId, message);
         NotifyPlayers(session);
         
         return result;
@@ -84,6 +89,12 @@ public class PlayerController(ISessionService sessionService, IConfigurationServ
             session.CurrentRound++;
         }
 
+        var message = $"Player {session.PlayerStatus[currentPlayerIndex].PlayerInfo.Name} rolled a special dice. Scored points: {roll}";
+        logService.LogInfo(sessionId, message);
+        if (roll == 1)
+        {
+            logService.LogInfo(sessionId, $"Player {session.PlayerStatus[currentPlayerIndex].PlayerInfo.Name} has lost");
+        }
         NotifyPlayers(session);
         
         return roll;

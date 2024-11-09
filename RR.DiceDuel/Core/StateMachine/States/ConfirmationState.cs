@@ -35,8 +35,11 @@ public class ConfirmationState : GameState
             
             _stepsUntilStart--;
         }
+        else
+        {
+            _stepsUntilStart = 50;
+        }
         
-        _stepsUntilStart = 50;
         return null;
     }
 }

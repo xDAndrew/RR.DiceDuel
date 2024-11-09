@@ -15,6 +15,6 @@ public class StateMachine : IStateMachine
             _currentState = nextState;
         }
         
-        return _currentState is FinishState;
+        return _currentState is not FinishState;
     }
 }

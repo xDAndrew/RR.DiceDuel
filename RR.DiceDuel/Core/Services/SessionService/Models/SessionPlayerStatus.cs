@@ -11,7 +11,5 @@ public class SessionPlayerStatus
     
     public bool IsPlayerLost { get; set; }
     
-    public string LastInput { get; set; }
-    
     public Statistic GameStatistic { get; set; } = new();
 }

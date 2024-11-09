@@ -1,4 +1,5 @@
-﻿using RR.DiceDuel.Core.Services.SessionService.Types;
+﻿using RR.DiceDuel.Core.Services.SessionService.Models;
+using RR.DiceDuel.Core.Services.SessionService.Types;
 
 namespace RR.DiceDuel.Core.Controllers.GameController;
 
@@ -15,4 +16,6 @@ public interface IGameController
     void CleanUpSessionForNewGame(string sessionId);
 
     int GetCurrentRound(string sessionId);
+
+    void NotifyPlayers(Session session);
 }

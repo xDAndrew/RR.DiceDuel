@@ -5,7 +5,7 @@ using RR.DiceDuel.Core.Services.ConfigurationSerivce.Models;
 namespace RR.DiceDuel.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/[controller]/[action]")]
 public class ConfigurationController(IConfigurationService configurationService) : ControllerBase
 {
     [HttpPost]

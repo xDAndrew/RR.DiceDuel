@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using RR.DiceDuel.Core.Services.ConfigurationSerivce;
+using RR.DiceDuel.Core.Services.GameLogService;
 using RR.DiceDuel.Core.Services.PlayerService;
 using RR.DiceDuel.Core.Services.SessionService.Models;
 using RR.DiceDuel.Core.Services.SessionService.Types;
@@ -9,7 +10,7 @@ using RR.DiceDuel.Core.StateMachine;
 namespace RR.DiceDuel.Core.Services.SessionService;
 
 public class SessionService(IPlayerService playerService, IServiceScopeFactory scopeFactory, 
-    IConfigurationService configurationService) : ISessionService
+    IConfigurationService configurationService, IGameLogService logService) : ISessionService
 {
     private static readonly ConcurrentDictionary<string, Session> SessionCollection = new();
     
@@ -57,6 +58,7 @@ public class SessionService(IPlayerService playerService, IServiceScopeFactory s
             GameStatistic = new Statistic()
         };
         
+        logService.LogInfo(sessionId, $"Player {player.Name} join the game!" );
         session?.PlayerStatus.Add(playerStatus);
     }
 
@@ -72,6 +74,7 @@ public class SessionService(IPlayerService playerService, IServiceScopeFactory s
         var playerStatus = session?.PlayerStatus?.FirstOrDefault(x => x.PlayerInfo.Id == player.Id);
         if (playerStatus != null)
         {
+            logService.LogInfo(sessionId, $"Player {player.Name} leave the game!" );
             session.PlayerStatus.Remove(playerStatus);
         }
     }
@@ -89,6 +92,6 @@ public class SessionService(IPlayerService playerService, IServiceScopeFactory s
 
     public List<Session> GetSessions()
     {
-        return SessionCollection.Select(x => x.Value).ToList();
+        return SessionCollection.Values.ToList();
     }
 }

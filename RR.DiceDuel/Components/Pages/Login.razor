@@ -80,14 +80,14 @@
             var loginData = await AuthService.LoginAsync(_loginModel.Login, _loginModel.Password);
             switch (loginData.Status)
             {
-                case AuthStatusType.SUCCESS:
+                case AuthStatusType.Success:
                     await SessionStorage.SetItemAsync("authToken", loginData.Token);
                     Navigation.NavigateTo("/");
                     break;
-                case AuthStatusType.WRONG_PASSWORD:
+                case AuthStatusType.WrongPassword:
                     ErrorMessage = "Wrong username or password!";
                     break;
-                case AuthStatusType.USER_ALREADY_CONNECTED:
+                case AuthStatusType.UserAlreadyConnected:
                     ErrorMessage = "User already connected!";
                     break;
             }
@@ -97,11 +97,11 @@
             var loginData = await AuthService.RegisterUserAsync(_loginModel.Login, _loginModel.Password);
             switch (loginData.Status)
             {
-                case AuthStatusType.SUCCESS:
+                case AuthStatusType.Success:
                     await SessionStorage.SetItemAsync("authToken", loginData.Token);
                     Navigation.NavigateTo("/");
                     break;
-                case AuthStatusType.USER_ALREADY_EXIST:
+                case AuthStatusType.UserAlreadyExist:
                     ErrorMessage = "User already exist!";
                     break;
             }

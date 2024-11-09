@@ -19,7 +19,7 @@ public class AuthService(GameContext gameContext, IPlayerService playerService) 
         {
             return new LoginData
             {
-                Status = AuthStatusType.USER_ALREADY_EXIST
+                Status = AuthStatusType.UserAlreadyExist
             };
         }
 
@@ -37,7 +37,7 @@ public class AuthService(GameContext gameContext, IPlayerService playerService) 
         return new LoginData
         {
             Token = token,
-            Status = AuthStatusType.SUCCESS
+            Status = AuthStatusType.Success
         };
     }
 
@@ -48,7 +48,7 @@ public class AuthService(GameContext gameContext, IPlayerService playerService) 
         {
             return new LoginData
             {
-                Status = AuthStatusType.USER_NOT_FOUND
+                Status = AuthStatusType.UserNotFound
             };
         }
         
@@ -57,7 +57,7 @@ public class AuthService(GameContext gameContext, IPlayerService playerService) 
         {
             return new LoginData
             {
-                Status = AuthStatusType.WRONG_PASSWORD
+                Status = AuthStatusType.WrongPassword
             };
         }
 
@@ -65,7 +65,7 @@ public class AuthService(GameContext gameContext, IPlayerService playerService) 
         {
             return new LoginData
             {
-                Status = AuthStatusType.USER_ALREADY_CONNECTED
+                Status = AuthStatusType.UserAlreadyConnected
             };
         }
         
@@ -74,7 +74,7 @@ public class AuthService(GameContext gameContext, IPlayerService playerService) 
         return new LoginData
         {
             Token = token,
-            Status = AuthStatusType.SUCCESS
+            Status = AuthStatusType.Success
         };
     }
 

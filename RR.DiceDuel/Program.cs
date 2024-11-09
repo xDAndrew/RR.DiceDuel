@@ -9,8 +9,10 @@ using RR.DiceDuel.Core.Controllers.GameController;
 using RR.DiceDuel.Core.Controllers.PlayerController;
 using RR.DiceDuel.Core.Services.AuthService;
 using RR.DiceDuel.Core.Services.ConfigurationSerivce;
+using RR.DiceDuel.Core.Services.GameLogService;
 using RR.DiceDuel.Core.Services.PlayerService;
 using RR.DiceDuel.Core.Services.SessionService;
+using RR.DiceDuel.Core.Services.StatisticService;
 using RR.DiceDuel.Core.StateMachine;
 using RR.DiceDuel.Core.StateMachine.Interfaces;
 using RR.DiceDuel.ExternalServices.EntityFramework;
@@ -19,6 +21,8 @@ using RR.DiceDuel.ExternalServices.SignalR;
 var connectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -51,15 +55,19 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddDbContext<GameContext>(options => options.UseNpgsql(connectionString));
-builder.Services.AddScoped<IAuthService, AuthService>();
+
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazoredSessionStorage();
+
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IStateMachine, StateMachine>();
 
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPlayerService, PlayerService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
+builder.Services.AddScoped<IGameLogService, GameLogService>();
+builder.Services.AddScoped<IStatisticService, StatisticService>();
 
 builder.Services.AddScoped<IGameController, GameController>();
 builder.Services.AddScoped<IPlayerController, PlayerController>();

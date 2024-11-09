@@ -1,5 +1,7 @@
-html, body {
+body, html {
+    overflow: hidden;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #f0f0f0;
 }
 
 a, .btn-link {
@@ -131,4 +133,50 @@ p {
     to {
         transform: rotate(360deg);
     }
+}
+
+.waiting-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 24px;
+    color: #333;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.dice-spinner {
+    width: 40px;
+    height: 40px;
+    background-color: #fff;
+    border: 2px solid #333;
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    animation: spin 1.5s linear infinite;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    background-color: #333;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.dot-center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.dot-top-left { top: 25%; left: 25%; }
+.dot-top-right { top: 25%; right: 25%; }
+.dot-bottom-left { bottom: 25%; left: 25%; }
+.dot-bottom-right { bottom: 25%; right: 25%; }
+.dot-middle-left { top: 50%; left: 25%; transform: translateY(-50%); }
+.dot-middle-right { top: 50%; right: 25%; transform: translateY(-50%); }
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

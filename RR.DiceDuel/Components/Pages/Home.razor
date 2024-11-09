@@ -1,6 +1,5 @@
 ﻿@page "/"
 @using Blazored.SessionStorage
-@using Microsoft.AspNetCore.SignalR.Client
 @using RR.DiceDuel.Core.Services.AuthService
 @using RR.DiceDuel.Core.Services.SessionService
 @rendermode InteractiveServer
@@ -9,8 +8,6 @@
 @inject NavigationManager Navigation
 @inject ISessionStorageService SessionStorage
 @inject ISessionService SessionService
-
-@implements IAsyncDisposable
 
 <PageTitle>Home</PageTitle>
 
@@ -25,8 +22,6 @@ Status: @_message
 @code
 {
     private string _userName = string.Empty;
-    
-    private HubConnection _hubConnection;
     private string _message = "Waiting connection...";
 
     protected override async Task OnInitializedAsync()
@@ -43,27 +38,10 @@ Status: @_message
             var isTokenValid = AuthService.VerifyJwt(token);
             if (!isTokenValid)
             {
-                Navigation.NavigateTo("/login", new NavigationOptions
-                {
-                    ForceLoad = true
-                });
+                Navigation.NavigateTo("/login");
                 return;
             }
-            
-            // _hubConnection = new HubConnectionBuilder()
-            //     .WithUrl(Navigation.ToAbsoluteUri("api/game?roomId=Lobby"), options =>
-            //     {
-            //         options.AccessTokenProvider = () => Task.FromResult(token);
-            //     }).Build();
-            //
-            // _hubConnection.On<string, string>("ReceiveMessage", (user, msg) =>
-            // {
-            //     _message = $"{user}: {msg}";
-            //     InvokeAsync(StateHasChanged);
-            // });
-            //
-            // await _hubConnection.StartAsync();
-            
+
             _message = "Connected!";
             _userName = AuthService.GetUserName(token);
             
@@ -77,13 +55,5 @@ Status: @_message
     {
         var sessionId = SessionService.GetOrCreateSession();
         Navigation.NavigateTo($"/game/{sessionId}");
-    }
-    
-    public async ValueTask DisposeAsync()
-    {
-        if (_hubConnection != null)
-        {
-            await _hubConnection.DisposeAsync();
-        }
     }
 }

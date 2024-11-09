@@ -1,11 +1,16 @@
-﻿using RR.DiceDuel.Core.Services.ConfigurationSerivce;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.SignalR;
+using RR.DiceDuel.Core.Services.ConfigurationSerivce;
 using RR.DiceDuel.Core.Services.SessionService;
+using RR.DiceDuel.Core.Services.SessionService.Models;
 using RR.DiceDuel.Core.Services.SessionService.Types;
 using RR.DiceDuel.Core.Services.StatisticService.Models;
+using RR.DiceDuel.ExternalServices.SignalR;
 
 namespace RR.DiceDuel.Core.Controllers.GameController;
 
-public class GameController(ISessionService sessionService, IConfigurationService configurationService) : IGameController
+public class GameController(ISessionService sessionService, IConfigurationService configurationService, 
+    IHubContext<GameHub> gameHub) : IGameController
 {
     public void SetSessionState(string sessionId, SessionStateType newState)
     {
@@ -16,6 +21,7 @@ public class GameController(ISessionService sessionService, IConfigurationServic
         }
 
         session.CurrentState = newState;
+        NotifyPlayers(session);
     }
 
     public bool IsRoomFull(string sessionId)
@@ -61,12 +67,17 @@ public class GameController(ISessionService sessionService, IConfigurationServic
             player.IsPlayerReady = false;
             player.IsPlayerLost = false;
             player.GameStatistic = new Statistic();
-            player.LastInput = null;
         }
     }
 
     public int GetCurrentRound(string sessionId)
     {
         return sessionService.GetSession(sessionId)?.CurrentRound ?? 0;
+    }
+    
+    public void NotifyPlayers(Session session)
+    {
+        var json = JsonSerializer.Serialize(session);
+        gameHub.Clients.Groups(session.SessionId).SendAsync("UpdateSession", json);
     }
 }

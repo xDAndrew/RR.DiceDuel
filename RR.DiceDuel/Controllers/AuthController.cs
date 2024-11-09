@@ -5,22 +5,14 @@ using RR.DiceDuel.Core.Services.AuthService.Types;
 namespace RR.DiceDuel.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class AuthController
+[Route("api/[controller]/[action]")]
+public class AuthController(IAuthService authService)
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService;
-    }
-
     [HttpPost]
-    [Route("[action]")]
     public async Task<IActionResult> Register([FromQuery]string userName, [FromQuery]string password)
     {
-        var loginData = await _authService.RegisterUserAsync(userName, password);
-        if (loginData.Status == AuthStatusType.SUCCESS)
+        var loginData = await authService.RegisterUserAsync(userName, password);
+        if (loginData.Status == AuthStatusType.Success)
         {
             return new OkResult();
         }
@@ -28,12 +20,11 @@ public class AuthController
         return new UnauthorizedResult();
     }
     
-    [HttpGet]
-    [Route("[action]")]
+    [HttpPost]
     public async Task<IActionResult> Login([FromQuery]string userName, [FromQuery]string password)
     {
-        var loginData = await _authService.LoginAsync(userName, password);
-        if (loginData.Status == AuthStatusType.SUCCESS)
+        var loginData = await authService.LoginAsync(userName, password);
+        if (loginData.Status == AuthStatusType.Success)
         {
             return new OkObjectResult(loginData.Token);
         }
