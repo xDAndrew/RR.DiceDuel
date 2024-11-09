@@ -1,5 +1,6 @@
 ﻿using RR.DiceDuel.Core.Controllers.GameController;
 using RR.DiceDuel.Core.Services.GameLogService;
+using RR.DiceDuel.Core.Services.SessionService;
 using RR.DiceDuel.Core.Services.SessionService.Types;
 using RR.DiceDuel.Core.StateMachine.Interfaces;
 
@@ -8,11 +9,15 @@ namespace RR.DiceDuel.Core.StateMachine.States;
 public class ConfirmationState : GameState
 {
     private int _stepsUntilStart = 50; //1 step -> 100 ms
+    private int _timeSec = 5; //sec
     
     public override GameState UpdateState(string sessionId, AsyncServiceScope scope)
     {
         var gameController = scope.ServiceProvider.GetRequiredService<IGameController>();
         var gameLogger = scope.ServiceProvider.GetRequiredService<IGameLogService>();
+        var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
+
+        var session = sessionService.GetSession(sessionId);
         
         if (!gameController.IsRoomFull(sessionId))
         {
@@ -28,8 +33,12 @@ public class ConfirmationState : GameState
                 return new GameOngoingState();
             }
         
+            session.Timer = _timeSec;
+            gameController.NotifyPlayers(session);
+            
             if (_stepsUntilStart % 10 == 0)
             {
+                _timeSec--;
                 gameLogger.LogInfo(sessionId, $"The game will start in {_stepsUntilStart / 10} seconds");
             }
             
@@ -37,6 +46,7 @@ public class ConfirmationState : GameState
         }
         else
         {
+            _timeSec = 5;
             _stepsUntilStart = 50;
         }
         

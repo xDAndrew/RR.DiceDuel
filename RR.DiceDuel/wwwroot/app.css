@@ -8,6 +8,12 @@ a, .btn-link {
     color: #006bb7;
 }
 
+.btn {
+    width: 250px;
+    gap: 25px;
+    border-color: red;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;
@@ -146,6 +152,16 @@ p {
     margin: 0;
 }
 
+.waiting-container-mini {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 24px;
+    color: #333;
+    justify-content: center;
+    margin: 0;
+}
+
 .dice-spinner {
     width: 40px;
     height: 40px;
@@ -179,4 +195,81 @@ p {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.ready-button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    color: white;
+    background-color: green;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.ready-button:hover {
+    background-color: blue;
+}
+
+.center-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 24px;
+    color: #333;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.banner {
+    text-align: center;
+    padding: 20px;
+}
+
+.banner img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.second-place-text {
+    margin-top: 20px;
+    font-size: 36px;
+    font-weight: bold;
+    color: #333;
+    animation: text-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes text-glow {
+    from {
+        text-shadow: 0 0 5px #fff, 0 0 10px #30D5C8, 0 0 15px #30D5C8, 0 0 20px #30D5C8;
+    }
+    to {
+        text-shadow: 0 0 10px #eeeeee, 0 0 20px #eeeeee, 0 0 30px #eeeeee, 0 0 40px #eeeeee;
+    }
+}
+
+.winner-text {
+    margin-top: 20px;
+    font-size: 36px;
+    font-weight: bold;
+    color: #333;
+    animation: text-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes text-glow {
+    from {
+        text-shadow: 0 0 5px #fff, 0 0 10px #ffd700, 0 0 15px #ffd700, 0 0 20px #ffd700;
+    }
+    to {
+        text-shadow: 0 0 10px #eeeeee, 0 0 20px #eeeeee, 0 0 30px #eeeeee, 0 0 40px #eeeeee;
+    }
+}
+
+.result-image {
+    width: 300px;
+    height: 300px;
 }

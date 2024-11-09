@@ -11,6 +11,8 @@ public class Session
     public int CurrentRound { get; set; }
 
     public int CurrentPlayer { get; set; }
-    
+
+    public int Timer { get; set; }
+
     public List<SessionPlayerStatus> PlayerStatus { get; set; }
 }

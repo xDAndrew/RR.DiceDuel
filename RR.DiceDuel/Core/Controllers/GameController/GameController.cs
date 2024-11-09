@@ -62,6 +62,7 @@ public class GameController(ISessionService sessionService, IConfigurationServic
         
         session.CurrentPlayer = 0;
         session.CurrentRound = 0;
+        session.Timer = 0;
         foreach (var player in session.PlayerStatus)
         {
             player.IsPlayerReady = false;

@@ -16,48 +16,85 @@
 
 @implements IAsyncDisposable
 
-@if (_gameSession.CurrentState == SessionStateType.Started)
+@switch (_gameSession.CurrentState)
 {
-    <div class="waiting-container">
-        <div class="dice-spinner">
-            <div class="dot dot-center"></div>
-            <div class="dot dot-top-left"></div>
-            <div class="dot dot-top-right"></div>
-            <div class="dot dot-bottom-left"></div>
-            <div class="dot dot-bottom-right"></div>
+    case SessionStateType.Started:
+        <div class="waiting-container">
+            <div class="dice-spinner">
+                <div class="dot dot-center"></div>
+                <div class="dot dot-top-left"></div>
+                <div class="dot dot-top-right"></div>
+                <div class="dot dot-bottom-left"></div>
+                <div class="dot dot-bottom-right"></div>
+            </div>
+            <div>Waiting for other players..</div>
         </div>
-        <div>Waiting for other players</div>
-    </div>
-}
-else
-{
-    <div class="text-left mt-3">
-        <small>Room ID: @GameId</small>
-    </div>
-
-    @if (_gameSession.CurrentState == SessionStateType.WaitingConfirmation)
-    {
-        <div class="d-flex justify-content-center align-items-center">
-            <button class="btn btn-primary" @onclick="OnPlayerReady">@_playerReadyButtonText</button>
+        break;
+    case SessionStateType.WaitingConfirmation:
+        <div class="d-flex justify-content-center ">
+            <div>
+                <h1>Are You Ready?</h1>
+            </div>
+            <div>
+                <button @onclick="OnPlayerReady" class="btn-primary">@_playerReadyButtonText</button>
+            </div>
+            <div>
+                @if (_gameSession.Timer > 0)
+                {
+                    <h3>Game start in @_gameSession.Timer second</h3>
+                }
+            </div>
         </div>
-    }
-
-    @if (_gameSession.CurrentState == SessionStateType.GameOngoing && IsMyTurn())
-    {
-        <div class="d-flex justify-content-center align-items-center">
-            <button class="btn btn-primary" @onclick="OnRoll">Roll Dice</button>
-            <button class="btn btn-primary" @onclick="OnRollSpecial">Roll Special Dice</button>
-        </div>
-    }
-
-    <div class="game-log-container">
-        <ul>
-            @foreach (var msg in _gameLog)
+        break;
+    case SessionStateType.GameOngoing:
+        if (IsMyTurn())
+        {
+            <div class="center-container">
+                <div class="d-flex justify-content-center align-items-center">
+                    <button class="btn btn-primary" @onclick="OnRoll">Roll Dice</button>
+                    <button class="btn" @onclick="OnRollSpecial">Roll Special Dice</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="waiting-container">
+                <div class="dice-spinner">
+                    <div class="dot dot-center"></div>
+                    <div class="dot dot-top-left"></div>
+                    <div class="dot dot-top-right"></div>
+                    <div class="dot dot-bottom-left"></div>
+                    <div class="dot dot-bottom-right"></div>
+                </div>
+                <div>Waiting for other players turn...</div>
+            </div>
+        }
+        break;
+    case SessionStateType.ShowResult:
+        <div class="banner">
+            <img class="result-image" src="/content/FirstPlayer.webp" alt="Winner Dice Duel">
+            <div class="winner-text">Player @_userName won!</div>
+            @if (_gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false)
             {
-                <li>@msg</li>
+                <div class="justify-content-center">
+                    <div class="dice-spinner">
+                        <div class="dot dot-center"></div>
+                        <div class="dot dot-top-left"></div>
+                        <div class="dot dot-top-right"></div>
+                        <div class="dot dot-bottom-left"></div>
+                        <div class="dot dot-bottom-right"></div>
+                    </div>
+                    <div>Waiting for other players...</div>
+                </div>
             }
-        </ul>
-    </div>
+            else
+            {
+                <button @onclick="OnPlayerReady" class="btn-primary">Play again!</button>
+            }
+        </div>
+        break;
+    default:
+        throw new ArgumentOutOfRangeException();
 }
 
 @code {
@@ -100,7 +137,7 @@ else
                 _gameSession = JsonSerializer.Deserialize<Session>(receivedMessage);
                 
                 var isPlayerReady = _gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false;
-                _playerReadyButtonText = isPlayerReady ? "Not ready!" : "Ready!";
+                _playerReadyButtonText = isPlayerReady ? "No!" : "Yes!";
                 
                 InvokeAsync(StateHasChanged);
             });
