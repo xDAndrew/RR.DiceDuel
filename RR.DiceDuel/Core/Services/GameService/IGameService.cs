@@ -1,9 +1,9 @@
 ﻿using RR.DiceDuel.Core.Services.SessionService.Models;
 using RR.DiceDuel.Core.Services.SessionService.Types;
 
-namespace RR.DiceDuel.Core.Controllers.GameController;
+namespace RR.DiceDuel.Core.Services.GameService;
 
-public interface IGameController
+public interface IGameService
 {
     void SetSessionState(string sessionId, SessionStateType newState);
 

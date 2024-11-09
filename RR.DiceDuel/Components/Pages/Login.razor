@@ -12,42 +12,42 @@
 
 <PageTitle>Login</PageTitle>
 
-<div class="container d-flex justify-content-center mt-5">
-    <div class="card p-4">
-        <h3 class="text-center mb-4">@_formTitle</h3>
+<div>
+    <div>
+        <h3>@_formTitle</h3>
         <EditForm FormName="login_form" Model="@_loginModel" OnValidSubmit="HandleLogin">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
             @if (!string.IsNullOrEmpty(ErrorMessage))
             {
-                <div class="alert alert-danger" role="alert">
+                <div role="alert">
                     @ErrorMessage
                 </div>
             }
             
-            <div class="mb-3">
-                <label for="login" class="form-label">Nickname</label>
+            <div>
+                <label>Nickname</label>
                 <InputText id="login" class="form-control" @bind-Value="@_loginModel.Login" placeholder="Enter your nickname" />
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
                 <InputText id="password" class="form-control" @bind-Value="@_loginModel.Password" placeholder="Enter your password" type="password" />
             </div>
-            <div class="d-grid">
-                <button type="submit" class="btn btn-primary">@_title</button>
+            <div>
+                <button type="submit">@_title</button>
             </div>
         </EditForm>
         
         @if (_currentPage == "/login")
         {
-            <div class="text-center mt-3">
+            <div>
                 <small><a href="#" class="text-muted" @onclick="OnRegisterClick">Register here</a></small>
             </div>
         }
         else
         {
-            <div class="text-center mt-3">
+            <div>
                 <small><a href="#" class="text-muted" @onclick="OnRegisterClick">Already have account? Login here</a></small>
             </div>
         }

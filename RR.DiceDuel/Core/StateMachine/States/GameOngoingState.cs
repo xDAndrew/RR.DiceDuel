@@ -1,6 +1,6 @@
-﻿using RR.DiceDuel.Core.Controllers.GameController;
-using RR.DiceDuel.Core.Services.ConfigurationSerivce;
+﻿using RR.DiceDuel.Core.Services.ConfigurationSerivce;
 using RR.DiceDuel.Core.Services.GameLogService;
+using RR.DiceDuel.Core.Services.GameService;
 using RR.DiceDuel.Core.Services.SessionService.Types;
 using RR.DiceDuel.Core.StateMachine.Interfaces;
 
@@ -10,7 +10,7 @@ public class GameOngoingState : GameState
 {
     public override GameState UpdateState(string sessionId, AsyncServiceScope scope)
     {
-        var gameController = scope.ServiceProvider.GetRequiredService<IGameController>();
+        var gameController = scope.ServiceProvider.GetRequiredService<IGameService>();
         var logger = scope.ServiceProvider.GetRequiredService<IGameLogService>();
         var gameConfig = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
         

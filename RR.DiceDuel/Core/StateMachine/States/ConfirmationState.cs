@@ -1,5 +1,5 @@
-﻿using RR.DiceDuel.Core.Controllers.GameController;
-using RR.DiceDuel.Core.Services.GameLogService;
+﻿using RR.DiceDuel.Core.Services.GameLogService;
+using RR.DiceDuel.Core.Services.GameService;
 using RR.DiceDuel.Core.Services.SessionService;
 using RR.DiceDuel.Core.Services.SessionService.Types;
 using RR.DiceDuel.Core.StateMachine.Interfaces;
@@ -13,7 +13,7 @@ public class ConfirmationState : GameState
     
     public override GameState UpdateState(string sessionId, AsyncServiceScope scope)
     {
-        var gameController = scope.ServiceProvider.GetRequiredService<IGameController>();
+        var gameController = scope.ServiceProvider.GetRequiredService<IGameService>();
         var gameLogger = scope.ServiceProvider.GetRequiredService<IGameLogService>();
         var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
 
@@ -48,6 +48,9 @@ public class ConfirmationState : GameState
         {
             _timeSec = 5;
             _stepsUntilStart = 50;
+            
+            session.Timer = -1;
+            gameController.NotifyPlayers(session);
         }
         
         return null;

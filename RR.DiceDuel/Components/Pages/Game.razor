@@ -2,8 +2,8 @@
 @using System.Text.Json
 @using Blazored.SessionStorage
 @using Microsoft.AspNetCore.SignalR.Client
-@using RR.DiceDuel.Core.Controllers.PlayerController
 @using RR.DiceDuel.Core.Services.AuthService
+@using RR.DiceDuel.Core.Services.PlayerControllerService
 @using RR.DiceDuel.Core.Services.SessionService.Models
 @using RR.DiceDuel.Core.Services.SessionService.Types
 @rendermode InteractiveServer
@@ -11,7 +11,7 @@
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject ISessionStorageService SessionStorage
-@inject IPlayerController PlayerController
+@inject IPlayerControllerService PlayerControllerService
 @inject IJSRuntime Js
 
 @implements IAsyncDisposable
@@ -19,78 +19,70 @@
 @switch (_gameSession.CurrentState)
 {
     case SessionStateType.Started:
-        <div class="waiting-container">
-            <div class="dice-spinner">
-                <div class="dot dot-center"></div>
-                <div class="dot dot-top-left"></div>
-                <div class="dot dot-top-right"></div>
-                <div class="dot dot-bottom-left"></div>
-                <div class="dot dot-bottom-right"></div>
-            </div>
-            <div>Waiting for other players..</div>
-        </div>
+        <div>Waiting for other players..</div>
         break;
     case SessionStateType.WaitingConfirmation:
-        <div class="d-flex justify-content-center ">
-            <div>
-                <h1>Are You Ready?</h1>
-            </div>
-            <div>
-                <button @onclick="OnPlayerReady" class="btn-primary">@_playerReadyButtonText</button>
-            </div>
-            <div>
-                @if (_gameSession.Timer > 0)
-                {
-                    <h3>Game start in @_gameSession.Timer second</h3>
-                }
-            </div>
-        </div>
+        <h3>Are you ready?</h3>
+        <button @onclick="OnPlayerReady">@_playerReadyButtonText</button>
+        @if (_gameSession.Timer > -1)
+        {
+            <h3>Game start in @_gameSession.Timer second</h3>
+        }
         break;
     case SessionStateType.GameOngoing:
         if (IsMyTurn())
         {
-            <div class="center-container">
-                <div class="d-flex justify-content-center align-items-center">
-                    <button class="btn btn-primary" @onclick="OnRoll">Roll Dice</button>
-                    <button class="btn" @onclick="OnRollSpecial">Roll Special Dice</button>
-                </div>
+            <div>
+                <button @onclick="OnRoll">Roll Dice</button>
+                <button @onclick="OnRollSpecial">Roll Special Dice</button>
             </div>
         }
         else
         {
-            <div class="waiting-container">
-                <div class="dice-spinner">
-                    <div class="dot dot-center"></div>
-                    <div class="dot dot-top-left"></div>
-                    <div class="dot dot-top-right"></div>
-                    <div class="dot dot-bottom-left"></div>
-                    <div class="dot dot-bottom-right"></div>
-                </div>
-                <div>Waiting for other players turn...</div>
-            </div>
+            <div>Your result: @_lastTurn</div>
+            <div>Waiting for other players turn...</div>
         }
         break;
     case SessionStateType.ShowResult:
-        <div class="banner">
-            <img class="result-image" src="/content/FirstPlayer.webp" alt="Winner Dice Duel">
-            <div class="winner-text">Player @_userName won!</div>
-            @if (_gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false)
-            {
-                <div class="justify-content-center">
-                    <div class="dice-spinner">
-                        <div class="dot dot-center"></div>
-                        <div class="dot dot-top-left"></div>
-                        <div class="dot dot-top-right"></div>
-                        <div class="dot dot-bottom-left"></div>
-                        <div class="dot dot-bottom-right"></div>
-                    </div>
+        <div>
+            <div>
+                @switch (GetWinner())
+                {
+                    case -1:
+                        <img class="result-image" src="/content/SecondPlace.webp" alt="Winner Dice Duel">
+                        break;
+                    case 0:
+                        <img class="result-image" src="/content/Draw.webp" alt="Winner Dice Duel">
+                        break;
+                    case 1:
+                        <img class="result-image" src="/content/FirstPlayer.webp" alt="Winner Dice Duel">
+                        break;
+                }
+            </div>
+            <div>
+                @switch (GetWinner())
+                {
+                    case -1:
+                        <h1>Better Luck next time, @_userName</h1>
+                    break;
+                    case 0:
+                        <h1>It's a Draw!</h1>
+                    break;
+                    case 1:
+                        <h1>Player @_userName won!</h1>
+                    break;
+                }
+            </div>
+            <div>
+                @if (_gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false)
+                {
                     <div>Waiting for other players...</div>
-                </div>
-            }
-            else
-            {
-                <button @onclick="OnPlayerReady" class="btn-primary">Play again!</button>
-            }
+                }
+                else
+                {
+                    <button @onclick="OnPlayerReady">Play again!</button>
+                }
+            </div>
         </div>
         break;
     default:
@@ -101,19 +93,17 @@
     [Parameter]
     public Guid GameId { get; set; }
     private HubConnection _hubConnection;
-    
     private string _userName = string.Empty;
-
     private string _playerReadyButtonText = string.Empty;
-
     private Session _gameSession = new();
-
-    private readonly Stack<string> _gameLog = new();
+    
+    private string _lastTurn = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            await Js.InvokeVoidAsync("window.onBeforeUnload.subscribeBeforeUnload", DotNetObjectReference.Create(this));
             var token = await SessionStorage.GetItemAsync<string>("authToken");
 
             var isTokenValid = AuthService.VerifyJwt(token);
@@ -142,12 +132,6 @@
                 InvokeAsync(StateHasChanged);
             });
             
-            _hubConnection.On<string>("LogInfo", receivedMessage =>
-            {
-                _gameLog.Push(receivedMessage);
-                InvokeAsync(StateHasChanged);
-            });
-            
             await _hubConnection.StartAsync();
             
             _userName = AuthService.GetUserName(token);
@@ -158,29 +142,67 @@
     
     private void OnPlayerReady()
     {
-        PlayerController.SetPlayerReady(GameId.ToString(), _userName);
+        PlayerControllerService.SetPlayerReady(GameId.ToString(), _userName);
     }
     
     private void OnRoll()
     {
         _ = PlaySound();
-        PlayerController.SetRoll(GameId.ToString());
+        var roll = PlayerControllerService.SetRoll(GameId.ToString());
+        var turn = roll.Select(x => $"[{x}]").ToList();
+        _lastTurn = $"Your result: {turn[0]} {turn[1]} {turn[2]} - score {roll.Sum()}";
     }
     
     private void OnRollSpecial()
     {
         _ = PlaySound();
-        PlayerController.SetSpecialRoll(GameId.ToString());
+        var roll = PlayerControllerService.SetSpecialRoll(GameId.ToString());
+
+        _lastTurn = roll switch
+        {
+            1 => "Your result: [X] - you lost!",
+            6 => "Your result: [L] - score 24!",
+            _ => _lastTurn
+        };
+
+        _lastTurn = $"Your result: {roll}";
     }
 
     private bool IsMyTurn()
     {
-        return PlayerController.CurrentPlayerMoveName(GameId.ToString()) == _userName;
+        return PlayerControllerService.CurrentPlayerMoveName(GameId.ToString()) == _userName;
     }
     
     private async Task PlaySound()
     {
         await Js.InvokeVoidAsync("playSound", "/content/roll.mp3");
+    }
+
+    private int GetWinner()
+    {
+        var player = _gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName);
+        if (player is null)
+        {
+            return -2;
+        }
+        
+        if (player.GameStatistic.Wins > 0)
+        {
+            return 1;
+        }
+        
+        if (player.GameStatistic.Defeats > 0)
+        {
+            return -1;
+        }
+        
+        return 0;
+    }
+    
+    [JSInvokable]
+    public void OnBeforeUnload()
+    {
+        _ = DisposeAsync();
     }
     
     public async ValueTask DisposeAsync()

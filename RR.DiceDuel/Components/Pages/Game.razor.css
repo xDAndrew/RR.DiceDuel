@@ -1,0 +1,10 @@
+﻿body {
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+}
+
+.result-image {
+    width: 300px;
+    height: 300px;
+}

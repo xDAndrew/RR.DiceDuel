@@ -7,10 +7,10 @@ using RR.DiceDuel.Core.Services.SessionService.Types;
 using RR.DiceDuel.Core.Services.StatisticService.Models;
 using RR.DiceDuel.ExternalServices.SignalR;
 
-namespace RR.DiceDuel.Core.Controllers.GameController;
+namespace RR.DiceDuel.Core.Services.GameService;
 
-public class GameController(ISessionService sessionService, IConfigurationService configurationService, 
-    IHubContext<GameHub> gameHub) : IGameController
+public class GameService(ISessionService sessionService, IConfigurationService configurationService, 
+    IHubContext<GameHub> gameHub) : IGameService
 {
     public void SetSessionState(string sessionId, SessionStateType newState)
     {
@@ -62,7 +62,7 @@ public class GameController(ISessionService sessionService, IConfigurationServic
         
         session.CurrentPlayer = 0;
         session.CurrentRound = 0;
-        session.Timer = 0;
+        session.Timer = -1;
         foreach (var player in session.PlayerStatus)
         {
             player.IsPlayerReady = false;

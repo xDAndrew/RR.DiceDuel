@@ -1,6 +1,6 @@
-﻿namespace RR.DiceDuel.Core.Controllers.PlayerController;
+﻿namespace RR.DiceDuel.Core.Services.PlayerControllerService;
 
-public interface IPlayerController
+public interface IPlayerControllerService
 {
     void SetPlayerReady(string sessionId, string playerName);
     

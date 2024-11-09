@@ -6,10 +6,10 @@ using RR.DiceDuel.Core.Services.SessionService;
 using RR.DiceDuel.Core.Services.SessionService.Models;
 using RR.DiceDuel.ExternalServices.SignalR;
 
-namespace RR.DiceDuel.Core.Controllers.PlayerController;
+namespace RR.DiceDuel.Core.Services.PlayerControllerService;
 
-public class PlayerController(ISessionService sessionService, IConfigurationService configurationService, 
-    IHubContext<GameHub> gameHub, IGameLogService logService) : IPlayerController
+public class PlayerControllerServiceService(ISessionService sessionService, IConfigurationService configurationService, 
+    IHubContext<GameHub> gameHub, IGameLogService logService) : IPlayerControllerService
 {
     private readonly Random _random = new(Guid.NewGuid().GetHashCode());
     
