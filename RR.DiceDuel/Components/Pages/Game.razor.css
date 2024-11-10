@@ -8,3 +8,30 @@
     width: 300px;
     height: 300px;
 }
+
+.div-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;     
+    height: 100%;            
+}
+
+.players {
+    display: flex;
+    justify-content: space-between; /* Размещаем элементы по краям */
+    width: 100%; /* Занимаем всю ширину контейнера */
+}
+
+.player {
+    font-size: 18px;
+    font-weight: bold;
+    width: 50%; /* Каждое имя занимает 50% ширины */
+}
+
+.player-left {
+    text-align: left; /* Выравнивание текста по левому краю */
+}
+
+.player-right {
+    text-align: right; /* Выравнивание текста по правому краю */
+}

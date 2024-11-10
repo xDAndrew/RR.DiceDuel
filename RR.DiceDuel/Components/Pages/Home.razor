@@ -2,58 +2,102 @@
 @using Blazored.SessionStorage
 @using RR.DiceDuel.Core.Services.AuthService
 @using RR.DiceDuel.Core.Services.SessionService
+@using RR.DiceDuel.Core.Services.StatisticService
+@using RR.DiceDuel.Core.Services.StatisticService.Models
 @rendermode InteractiveServer
+@attribute [StreamRendering]
 
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject ISessionStorageService SessionStorage
 @inject ISessionService SessionService
+@inject IStatisticService StatisticService
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, @_userName!</h1>
-Welcome to your new app.
-Status: @_message
+@if (!string.IsNullOrEmpty(_userName))
+{
+    <h1>Hello, @_userName!</h1>
 
-<div class="d-flex justify-content-center align-items-center vh-100">
-    <button class="btn btn-primary" @onclick="OnButtonClick">Let's Play!</button>
-</div>
+    <div>
+        <h3>
+            Your achievements:
+        </h3>
+        <ul>
+            <li>Wins - @_playerStat.Wins</li>
+            <li>Draws - @_playerStat.Draw</li>
+            <li>Defeats - @_playerStat.Defeats</li>
+            <li>Rolls - @_playerStat.NormalRolled</li>
+            <li>Special Rolls - @_playerStat.SpecialRolled</li>
+            <li>Unlucky - @_playerStat.GotZeroScore</li>
+            <li>Lucky - @_playerStat.GotMaxScore</li>
+            <li>TotalScore - @_playerStat.TotalScores</li>
+        </ul>
+    </div>
+
+    <div>
+        <h3>
+            Top 10 player:
+        </h3>
+        <ul>
+            @foreach (var player in _topPlayers)
+            {
+                <li>@(_topPlayers.IndexOf(player) + 1). @player.Name - @player.Score</li>
+            }
+        </ul>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <button class="btn btn-primary" @onclick="OnButtonClick">Let's Play!</button>
+    </div>
+}
 
 @code
 {
     private string _userName = string.Empty;
-    private string _message = "Waiting connection...";
-
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-    }
+    private List<PlayerStatistic> _topPlayers = [];
+    private Statistic _playerStat = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             var token = await SessionStorage.GetItemAsync<string>("authToken");
-
             var isTokenValid = AuthService.VerifyJwt(token);
             if (!isTokenValid)
             {
                 Navigation.NavigateTo("/login");
-                return;
             }
-
-            _message = "Connected!";
             _userName = AuthService.GetUserName(token);
             
+            _playerStat = StatisticService.GetUserStatistic(_userName);
+            GetTopPlayers();
             StateHasChanged();
         }
         
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private void GetTopPlayers()
+    {
+        _topPlayers = StatisticService.GetLeaders().Select(x => new PlayerStatistic
+        {
+            Name = x.Key,
+            Score = x.Value.TotalScores
+        }).ToList();
+        
+        _topPlayers.Sort((x, y) => y.Score.CompareTo(x.Score));
     }
     
     private void OnButtonClick()
     {
         var sessionId = SessionService.GetOrCreateSession();
         Navigation.NavigateTo($"/game/{sessionId}");
+    }
+    
+    public class PlayerStatistic
+    {
+        public string Name { get; set; }
+        public long Score { get; set; }
     }
 }

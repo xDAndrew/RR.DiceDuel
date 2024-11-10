@@ -108,7 +108,6 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 var app = builder.Build();
 
 app.UseStaticFiles();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

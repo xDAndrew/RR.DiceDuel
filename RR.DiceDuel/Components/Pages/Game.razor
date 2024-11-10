@@ -1,4 +1,5 @@
 ﻿@page "/game/{GameId:guid}"
+@using System.Text
 @using System.Text.Json
 @using Blazored.SessionStorage
 @using Microsoft.AspNetCore.SignalR.Client
@@ -16,6 +17,7 @@
 
 @implements IAsyncDisposable
 
+<div>@GetGameResult()</div>
 @switch (_gameSession.CurrentState)
 {
     case SessionStateType.Started:
@@ -44,45 +46,43 @@
         }
         break;
     case SessionStateType.ShowResult:
+        <div class="div-wrapper">
+            @switch (GetWinner())
+            {
+            case -1:
+            <img class="result-image" src="/content/SecondPlace.webp" alt="Winner Dice Duel">
+            break;
+            case 0:
+            <img class="result-image" src="/content/Draw.webp" alt="Winner Dice Duel">
+            break;
+            case 1:
+            <img class="result-image" src="/content/FirstPlayer.webp" alt="Winner Dice Duel">
+            break;
+            }
+        </div>
+        <div class="div-wrapper">
+            @switch (GetWinner())
+            {
+            case -1:
+            <h1>Better Luck next time, @_userName</h1>
+            break;
+            case 0:
+            <h1>It's a Draw!</h1>
+            break;
+            case 1:
+            <h1>Player @_userName won!</h1>
+            break;
+            }
+        </div>
         <div>
-            <div>
-                @switch (GetWinner())
-                {
-                    case -1:
-                        <img class="result-image" src="/content/SecondPlace.webp" alt="Winner Dice Duel">
-                        break;
-                    case 0:
-                        <img class="result-image" src="/content/Draw.webp" alt="Winner Dice Duel">
-                        break;
-                    case 1:
-                        <img class="result-image" src="/content/FirstPlayer.webp" alt="Winner Dice Duel">
-                        break;
-                }
-            </div>
-            <div>
-                @switch (GetWinner())
-                {
-                    case -1:
-                        <h1>Better Luck next time, @_userName</h1>
-                    break;
-                    case 0:
-                        <h1>It's a Draw!</h1>
-                    break;
-                    case 1:
-                        <h1>Player @_userName won!</h1>
-                    break;
-                }
-            </div>
-            <div>
-                @if (_gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false)
-                {
-                    <div>Waiting for other players...</div>
-                }
-                else
-                {
-                    <button @onclick="OnPlayerReady">Play again!</button>
-                }
-            </div>
+            @if (_gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false)
+            {
+            <div>Waiting for other players...</div>
+            }
+            else
+            {
+            <button @onclick="OnPlayerReady">Play again!</button>
+            }
         </div>
         break;
     default:
@@ -90,13 +90,12 @@
 }
 
 @code {
-    [Parameter]
-    public Guid GameId { get; set; }
+    [Parameter] public Guid GameId { get; set; }
     private HubConnection _hubConnection;
     private string _userName = string.Empty;
     private string _playerReadyButtonText = string.Empty;
     private Session _gameSession = new();
-    
+
     private string _lastTurn = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -115,36 +114,33 @@
                 });
                 return;
             }
-            
+
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri($"api/game?roomId={GameId}"), options =>
-                {
-                    options.AccessTokenProvider = () => Task.FromResult(token);
-                }).Build();
-            
+                .WithUrl(Navigation.ToAbsoluteUri($"api/game?roomId={GameId}"), options => { options.AccessTokenProvider = () => Task.FromResult(token); }).Build();
+
             _hubConnection.On<string>("UpdateSession", receivedMessage =>
             {
                 _gameSession = JsonSerializer.Deserialize<Session>(receivedMessage);
-                
+
                 var isPlayerReady = _gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false;
                 _playerReadyButtonText = isPlayerReady ? "No!" : "Yes!";
-                
+
                 InvokeAsync(StateHasChanged);
             });
-            
+
             await _hubConnection.StartAsync();
-            
+
             _userName = AuthService.GetUserName(token);
         }
 
         await base.OnAfterRenderAsync(firstRender);
     }
-    
+
     private void OnPlayerReady()
     {
         PlayerControllerService.SetPlayerReady(GameId.ToString(), _userName);
     }
-    
+
     private void OnRoll()
     {
         _ = PlaySound();
@@ -152,7 +148,7 @@
         var turn = roll.Select(x => $"[{x}]").ToList();
         _lastTurn = $"Your result: {turn[0]} {turn[1]} {turn[2]} - score {roll.Sum()}";
     }
-    
+
     private void OnRollSpecial()
     {
         _ = PlaySound();
@@ -172,7 +168,7 @@
     {
         return PlayerControllerService.CurrentPlayerMoveName(GameId.ToString()) == _userName;
     }
-    
+
     private async Task PlaySound()
     {
         await Js.InvokeVoidAsync("playSound", "/content/roll.mp3");
@@ -185,26 +181,41 @@
         {
             return -2;
         }
-        
+
         if (player.GameStatistic.Wins > 0)
         {
             return 1;
         }
-        
+
         if (player.GameStatistic.Defeats > 0)
         {
             return -1;
         }
-        
+
         return 0;
     }
-    
+
+    private string GetGameResult()
+    {
+        var stringBuilder = new StringBuilder();
+
+        if (_gameSession?.PlayerStatus is not null)
+        {
+            foreach (var player in _gameSession.PlayerStatus)
+            {
+                stringBuilder.AppendLine($"{player.PlayerInfo.Name} - {player.GameStatistic.TotalScores}");
+            }
+        }
+        
+        return stringBuilder.ToString();
+    }
+
     [JSInvokable]
     public void OnBeforeUnload()
     {
         _ = DisposeAsync();
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         if (_hubConnection != null)
