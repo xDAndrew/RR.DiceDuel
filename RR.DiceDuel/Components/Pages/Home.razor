@@ -17,12 +17,17 @@
 
 @if (!string.IsNullOrEmpty(_userName))
 {
-    <h1>Hello, @_userName!</h1>
+    <div class="div-wrapper">
+        <h1>Hello, @_userName!</h1>
+    </div>
 
-    <div>
+    <div class="div-wrapper">
         <h3>
             Your achievements:
         </h3>
+    </div>
+
+    <div class="div-wrapper">
         <ul>
             <li>Wins - @_playerStat.Wins</li>
             <li>Draws - @_playerStat.Draw</li>
@@ -34,21 +39,24 @@
             <li>TotalScore - @_playerStat.TotalScores</li>
         </ul>
     </div>
-
-    <div>
+    
+    <div class="div-wrapper">
         <h3>
             Top 10 player:
         </h3>
+    </div>
+
+    <div class="div-wrapper">
         <ul>
             @foreach (var player in _topPlayers)
             {
-                <li>@(_topPlayers.IndexOf(player) + 1). @player.Name - @player.Score</li>
+            <li>@(_topPlayers.IndexOf(player) + 1). @player.Name - @player.Score</li>
             }
         </ul>
     </div>
-
-    <div class="d-flex justify-content-center align-items-center vh-100">
-        <button class="btn btn-primary" @onclick="OnButtonClick">Let's Play!</button>
+    
+    <div class="div-wrapper">
+        <button @onclick="OnButtonClick">Let's Play!</button>
     </div>
 }
 

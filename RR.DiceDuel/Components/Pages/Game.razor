@@ -17,32 +17,57 @@
 
 @implements IAsyncDisposable
 
-<div>@GetGameResult()</div>
+<div class="div-wrapper">@GetGameResult()</div>
 @switch (_gameSession.CurrentState)
 {
     case SessionStateType.Started:
-        <div>Waiting for other players..</div>
+        
+        <div class="div-wrapper">
+            <div class="dice-spinner">
+                <div class="dot dot-center"></div>
+                <div class="dot dot-top-left"></div>
+                <div class="dot dot-top-right"></div>
+                <div class="dot dot-bottom-left"></div>
+                <div class="dot dot-bottom-right"></div>
+            </div>
+            Waiting for other players..
+        </div>
         break;
     case SessionStateType.WaitingConfirmation:
-        <h3>Are you ready?</h3>
-        <button @onclick="OnPlayerReady">@_playerReadyButtonText</button>
-        @if (_gameSession.Timer > -1)
-        {
-            <h3>Game start in @_gameSession.Timer second</h3>
-        }
+        <div class="div-wrapper">
+            <h3>Are you ready?</h3>
+        </div>
+        <div class="div-wrapper">
+            <button @onclick="OnPlayerReady">@_playerReadyButtonText</button>
+        </div>
+        <div class="div-wrapper">
+            @if (_gameSession.Timer > -1)
+            {
+                <h3>Game start in @_gameSession.Timer second</h3>
+            }
+        </div>
         break;
     case SessionStateType.GameOngoing:
         if (IsMyTurn())
         {
-            <div>
+            <div class="div-wrapper">
                 <button @onclick="OnRoll">Roll Dice</button>
                 <button @onclick="OnRollSpecial">Roll Special Dice</button>
             </div>
         }
         else
         {
-            <div>Your result: @_lastTurn</div>
-            <div>Waiting for other players turn...</div>
+            <div class="div-wrapper">@_lastTurn</div>
+            <div class="div-wrapper">
+                <div class="dice-spinner">
+                    <div class="dot dot-center"></div>
+                    <div class="dot dot-top-left"></div>
+                    <div class="dot dot-top-right"></div>
+                    <div class="dot dot-bottom-left"></div>
+                    <div class="dot dot-bottom-right"></div>
+                </div>
+                Waiting for other players turn...
+            </div>
         }
         break;
     case SessionStateType.ShowResult:
@@ -50,13 +75,13 @@
             @switch (GetWinner())
             {
             case -1:
-            <img class="result-image" src="/content/SecondPlace.webp" alt="Winner Dice Duel">
+                <img class="result-image" src="/content/SecondPlace.webp" alt="Winner Dice Duel">
             break;
             case 0:
-            <img class="result-image" src="/content/Draw.webp" alt="Winner Dice Duel">
+                <img class="result-image" src="/content/Draw.webp" alt="Winner Dice Duel">
             break;
             case 1:
-            <img class="result-image" src="/content/FirstPlayer.webp" alt="Winner Dice Duel">
+                <img class="result-image" src="/content/FirstPlayer.webp" alt="Winner Dice Duel">
             break;
             }
         </div>
@@ -64,24 +89,31 @@
             @switch (GetWinner())
             {
             case -1:
-            <h1>Better Luck next time, @_userName</h1>
+                <h1>Better Luck next time, @_userName</h1>
             break;
             case 0:
-            <h1>It's a Draw!</h1>
+                <h1>It's a Draw!</h1>
             break;
             case 1:
-            <h1>Player @_userName won!</h1>
+                <h1>Player @_userName won!</h1>
             break;
             }
         </div>
-        <div>
+        <div class="div-wrapper">
             @if (_gameSession.PlayerStatus.FirstOrDefault(x => x.PlayerInfo.Name == _userName)?.IsPlayerReady ?? false)
             {
-            <div>Waiting for other players...</div>
+                <div class="dice-spinner">
+                    <div class="dot dot-center"></div>
+                    <div class="dot dot-top-left"></div>
+                    <div class="dot dot-top-right"></div>
+                    <div class="dot dot-bottom-left"></div>
+                    <div class="dot dot-bottom-right"></div>
+                </div>
+                <div>Waiting for other players...</div>
             }
             else
             {
-            <button @onclick="OnPlayerReady">Play again!</button>
+                <button @onclick="OnPlayerReady">Play again!</button>
             }
         </div>
         break;

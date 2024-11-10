@@ -12,47 +12,49 @@
 
 <PageTitle>Login</PageTitle>
 
-<div>
-    <div>
-        <h3>@_formTitle</h3>
-        <EditForm FormName="login_form" Model="@_loginModel" OnValidSubmit="HandleLogin">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+<div class="div-wrapper">
+    <h3>@_formTitle</h3>
+</div>
 
-            @if (!string.IsNullOrEmpty(ErrorMessage))
-            {
-                <div role="alert">
-                    @ErrorMessage
-                </div>
-            }
-            
-            <div>
-                <label>Nickname</label>
-                <InputText id="login" class="form-control" @bind-Value="@_loginModel.Login" placeholder="Enter your nickname" />
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <InputText id="password" class="form-control" @bind-Value="@_loginModel.Password" placeholder="Enter your password" type="password" />
-            </div>
-            <div>
-                <button type="submit">@_title</button>
-            </div>
-        </EditForm>
-        
-        @if (_currentPage == "/login")
+<div class="div-wrapper">
+    <EditForm FormName="login_form" Model="@_loginModel" OnValidSubmit="HandleLogin">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
         {
-            <div>
-                <small><a href="#" class="text-muted" @onclick="OnRegisterClick">Register here</a></small>
-            </div>
+        <div role="alert">
+            @ErrorMessage
+        </div>
         }
-        else
-        {
-            <div>
-                <small><a href="#" class="text-muted" @onclick="OnRegisterClick">Already have account? Login here</a></small>
-            </div>
-        }
-        
+
+        <div>
+            <label>Nickname</label>
+            <InputText id="login" class="form-control" @bind-Value="@_loginModel.Login" placeholder="Enter your nickname" />
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <InputText id="password" class="form-control" @bind-Value="@_loginModel.Password" placeholder="Enter your password" type="password" />
+        </div>
+        <div>
+            <button type="submit">@_title</button>
+        </div>
+    </EditForm>
+</div>
+
+<div class="div-wrapper">
+    @if (_currentPage == "/login")
+    {
+    <div>
+        <small><a href="#" class="text-muted" @onclick="OnRegisterClick">Register here</a></small>
     </div>
+    }
+    else
+    {
+    <div>
+        <small><a href="#" class="text-muted" @onclick="OnRegisterClick">Already have account? Login here</a></small>
+    </div>
+    }
 </div>
 
 @code {

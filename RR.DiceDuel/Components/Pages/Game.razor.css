@@ -18,20 +18,49 @@
 
 .players {
     display: flex;
-    justify-content: space-between; /* Размещаем элементы по краям */
-    width: 100%; /* Занимаем всю ширину контейнера */
+    justify-content: space-between;
+    width: 100%;
 }
 
 .player {
     font-size: 18px;
     font-weight: bold;
-    width: 50%; /* Каждое имя занимает 50% ширины */
+    width: 50%;
 }
 
 .player-left {
-    text-align: left; /* Выравнивание текста по левому краю */
+    text-align: left;
 }
 
 .player-right {
-    text-align: right; /* Выравнивание текста по правому краю */
+    text-align: right;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    background-color: #333;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.dot-center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.dot-top-left { top: 25%; left: 25%; }
+.dot-top-right { top: 25%; right: 25%; }
+.dot-bottom-left { bottom: 25%; left: 25%; }
+.dot-bottom-right { bottom: 25%; right: 25%; }
+.dot-middle-left { top: 50%; left: 25%; transform: translateY(-50%); }
+.dot-middle-right { top: 50%; right: 25%; transform: translateY(-50%); }
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.dice-spinner {
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    animation: spin 1.5s linear infinite;
 }

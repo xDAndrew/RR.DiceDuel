@@ -108,7 +108,8 @@ public class AuthService(GameContext gameContext, IPlayerService playerService) 
     private static string GenerateJwtToken(string username)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = "MySuperSecretKeyWithAtLeast32Characters!"u8.ToArray();
+        var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+        var key = System.Text.Encoding.UTF8.GetBytes(secretKey);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]

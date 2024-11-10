@@ -79,10 +79,16 @@ builder.Services.AddAuthentication(options =>
     })
     .AddJwtBearer(options =>
     {
+        var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+        if (string.IsNullOrEmpty(secretKey) || secretKey.Length < 32)
+        {
+            throw new InvalidOperationException("JWT_SECRET_KEY must be at least 32 characters long and not null.");
+        }
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey("MySuperSecretKeyWithAtLeast32Characters!"u8.ToArray()),
+            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(secretKey)),
             ValidateIssuer = false,
             ValidateAudience = false
         };
