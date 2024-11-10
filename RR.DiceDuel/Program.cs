@@ -113,6 +113,12 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<GameContext>();
+    dbContext.Database.Migrate();
+}
+
 app.UseStaticFiles();
 if (app.Environment.IsDevelopment())
 {

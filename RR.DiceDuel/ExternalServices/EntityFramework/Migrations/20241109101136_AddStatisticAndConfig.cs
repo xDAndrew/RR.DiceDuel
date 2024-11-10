@@ -24,7 +24,13 @@ namespace RR.DiceDuel.ExternalServices.EntityFramework.Migrations
                 {
                     table.PrimaryKey("PK_Config", x => x.Id);
                 });
-
+            
+            migrationBuilder.InsertData(
+                table: "Config",
+                columns: new[] { "RoomMaxPlayer", "MaxGameRound" },
+                values: new object[] { 2, 3 }
+            );
+            
             migrationBuilder.CreateTable(
                 name: "Statistics",
                 columns: table => new
