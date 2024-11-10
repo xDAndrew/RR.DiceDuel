@@ -16,7 +16,8 @@ public class ResultCalculationState : GameState
         
         session.CurrentState = SessionStateType.ResultCalculation;
 
-        var maxScore = session.PlayerStatus.Select(x => x.GameStatistic.TotalScores).Max();
+        var maxScore = session.PlayerStatus
+            .Where(x => !x.IsPlayerLost).Select(x => x.GameStatistic.TotalScores).Max();
         var winnersCount = session.PlayerStatus
             .Where(x => x.GameStatistic.TotalScores == maxScore && !x.IsPlayerLost).ToList().Count;
 
