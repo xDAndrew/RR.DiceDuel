@@ -148,7 +148,14 @@
             }
 
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri($"api/game?roomId={GameId}"), options => { options.AccessTokenProvider = () => Task.FromResult(token); }).Build();
+                .WithUrl($"https://host.docker.internal/api/game?roomId={GameId}", options =>
+                {
+                    options.AccessTokenProvider = () => Task.FromResult(token);
+                    options.HttpMessageHandlerFactory = (x) => new HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                    };
+                }).Build();
 
             _hubConnection.On<string>("UpdateSession", receivedMessage =>
             {
