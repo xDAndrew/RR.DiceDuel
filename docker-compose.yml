@@ -1,0 +1,6 @@
+﻿services:
+  diceduel:
+    image: diceduel-game
+    build:
+      context: .
+      dockerfile: Dockerfile
